@@ -26,8 +26,8 @@
         display: block;
         margin-bottom: 10px;
         cursor: grab;
-        background: radial-gradient(circle at 30% 30%, #ffffff33, #000000dd);
-        box-shadow: 0 0 15px rgba(0,0,0,0.25);
+        background: #ffffff; /* чист бял фон под купола */
+        box-shadow: 0 0 20px rgba(0,0,0,0.35);
     }
 
     #dome-controls {
@@ -56,6 +56,7 @@
         border-radius: 6px;
         border: 1px solid #bbb;
         font-size: 14px;
+        box-sizing: border-box;
     }
 
     #bg-colors button {
@@ -214,8 +215,8 @@
       case "white":
       default:
         light = "#ffffff";
-        mid   = "#f4f4f4";
-        edge  = "#d8d8d8";
+        mid   = "#f7f7f7";
+        edge  = "#e0e0e0";
         break;
     }
 
@@ -237,7 +238,7 @@
       CX - R, CY - R,
       CX + R, CY + R
     );
-    glossGrad.addColorStop(0.0, "rgba(255,255,255,0.85)");
+    glossGrad.addColorStop(0.0, "rgba(255,255,255,0.9)");
     glossGrad.addColorStop(0.35, "rgba(255,255,255,0.25)");
     glossGrad.addColorStop(0.55, "rgba(255,255,255,0.00)");
     glossGrad.addColorStop(1.0, "rgba(0,0,0,0.40)");
@@ -258,7 +259,7 @@
       0,
       Math.PI * 2
     );
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.fill();
 
     ctx.restore();
