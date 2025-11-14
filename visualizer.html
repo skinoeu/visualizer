@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skino Custom Dome Preview</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #ffffff;
+    }
+
+    #dome-wrapper {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    #dome-canvas {
+        width: 380px;
+        height: 380px;
+        border-radius: 50%;
+        display: block;
+        margin-bottom: 10px;
+        cursor: grab;
+        background: radial-gradient(circle at 30% 30%, #ffffff33, #000000dd);
+        box-shadow: 0 0 15px rgba(0,0,0,0.25);
+    }
+
+    #dome-controls {
+        flex: 1;
+        max-width: 420px;
+        padding: 15px;
+        border-radius: 12px;
+        background: #f8f9fb;
+        box-shadow: 0 0 10px rgba(0,0,0,0.08);
+    }
+
+    .dome-label {
+        margin: 8px 0 4px;
+        font-weight: bold;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .dome-input,
+    #font-select,
+    #text-color,
+    #preview-text {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        border: 1px solid #bbb;
+        font-size: 14px;
+    }
+
+    #bg-colors button {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid #666;
+        margin-right: 6px;
+        cursor: pointer;
+    }
+
+    .dome-btn {
+        background: #0077ff;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: bold;
+        margin-top: 10px;
+        margin-right: 8px;
+        font-size: 14px;
+    }
+
+    .dome-btn.red {
+        background: #d93636;
+    }
+
+    p.dome-help {
+        font-size: 12px;
+        color: #666;
+        margin-top: 10px;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+        #dome-wrapper {
+            flex-direction: column;
+            align-items: center;
+        }
+        #dome-controls {
+            width: 100%;
+            max-width: 95%;
+        }
+        #dome-canvas {
+            width: 90vw;
+            height: 90vw;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div id="dome-wrapper">
+    <canvas id="dome-canvas" width="800" height="800"></canvas>
+
+    <div id="dome-controls">
+        <div class="dome-label">Type your text</div>
+        <input id="preview-text" placeholder="Type your text..." class="dome-input">
+
+        <div class="dome-label">Upload your logo (preview only)</div>
+        <input type="file" id="logo-upload" accept="image/*" class="dome-input">
+
+        <div class="dome-label">Background</div>
+        <div id="bg-colors">
+            <button data-bg="white" style="background:#fff"></button>
+            <button data-bg="black" style="background:#000"></button>
+            <button data-bg="silver" style="background:linear-gradient(145deg,#ddd,#999)"></button>
+            <button data-bg="red" style="background:#b00000"></button>
+            <button data-bg="blue" style="background:#003dff"></button>
+        </div>
+
+        <div class="dome-label">Font</div>
+        <select id="font-select" class="dome-input">
+            <option>Montserrat Medium</option>
+            <option>Franklin Gothic Demi Regular</option>
+            <option>Gill Sans MT Regular</option>
+            <option>Cambria Regular</option>
+            <option>Georgia Regular</option>
+            <option>Verdana Bold</option>
+        </select>
+
+        <div class="dome-label">Text color</div>
+        <select id="text-color" class="dome-input">
+            <option value="#ffffff">White</option>
+            <option value="#000000">Black</option>
+            <option value="#ff0000">Red</option>
+            <option value="#ffd700">Yellow</option>
+            <option value="#00a2ff">Blue</option>
+        </select>
+
+        <div class="dome-label">Text size</div>
+        <input type="range" id="text-size" min="20" max="120" value="60" class="dome-input">
+
+        <div class="dome-label">Logo zoom</div>
+        <input type="range" id="logo-zoom" min="0.2" max="3" step="0.01" value="1" class="dome-input">
+
+        <button id="save-preview" class="dome-btn">Save preview (PNG)</button>
+        <button id="reset-preview" class="dome-btn red">Reset</button>
+
+        <p class="dome-help">
+            This preview helps you position your logo and text.<br>
+            After saving, upload the PNG below in the “Upload your design” field of the product.
+        </p>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById("dome-canvas");
+    const ctx = canvas.getContext("2d");
+
+    let bgColor = "white";        // бял фон
+    let textValue = "";
+    let textSize = 60;
+    let textColor = "#000000";
+    let fontName = "Montserrat Medium";
+    let logoImg = null;
+    let logoZoom = 1;
+    let dragX = 0, dragY = 0;
+    let dragging = false;
+    let startX = 0, startY = 0;
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Background
+        ctx.fillStyle = bgColor;
+        ctx.beginPath();
+        ctx.arc(400, 400, 400, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Resin highlight
+        let grad = ctx.createRadialGradient(300, 250, 50, 400, 400, 400);
+        grad.addColorStop(0, "rgba(255,255,255,0.40)");
+        grad.addColorStop(1, "rgba(0,0,0,0.35)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(400, 400, 400, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Logo
+        if (logoImg) {
+            let w = logoImg.width * logoZoom;
+            let h = logoImg.height * logoZoom;
+            ctx.drawImage(logoImg, 400 - w/2 + dragX, 400 - h/2 + dragY, w, h);
+        }
+
+        // Text
+        if (textValue.trim() !== "") {
+            ctx.font = textSize + 'px "' + fontName + '"';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = "center";
+            ctx.fillText(textValue, 400, 420);
+        }
+    }
+
+    // Drag
+    canvas.addEventListener("mousedown", e => {
+        dragging = true;
+        startX = e.offsetX - dragX;
+        startY = e.offsetY - dragY;
+    });
+    canvas.addEventListener("mousemove", e => {
+        if (dragging) {
+            dragX = e.offsetX - startX;
+            dragY = e.offsetY - startY;
+            draw();
+        }
+    });
+    canvas.addEventListener("mouseup", () => dragging = false);
+    canvas.addEventListener("mouseleave", () => dragging = false);
+
+    // Background buttons
+    document.querySelectorAll("#bg-colors button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const color = btn.getAttribute("data-bg");
+            if (color === "white") bgColor = "#ffffff";
+            else if (color === "black") bgColor = "#000000";
+            else if (color === "silver") bgColor = "#bfbfbf";
+            else if (color === "red") bgColor = "#b00000";
+            else if (color === "blue") bgColor = "#003dff";
+            draw();
+        });
+    });
+
+    // Text controls
+    document.getElementById("preview-text").addEventListener("input", e => {
+        textValue = e.target.value;
+        draw();
+    });
+    document.getElementById("text-size").addEventListener("input", e => {
+        textSize = Number(e.target.value);
+        draw();
+    });
+    document.getElementById("text-color").addEventListener("change", e => {
+        textColor = e.target.value;
+        draw();
+    });
+    document.getElementById("font-select").addEventListener("change", e => {
+        fontName = e.target.value;
+        draw();
+    });
+
+    // Logo upload
+    document.getElementById("logo-upload").addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = function (ev) {
+            logoImg = new Image();
+            logoImg.onload = draw;
+            logoImg.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Logo zoom
+    document.getElementById("logo-zoom").addEventListener("input", e => {
+        logoZoom = Number(e.target.value);
+        draw();
+    });
+
+    // Save PNG
+    document.getElementById("save-preview").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "custom-dome-preview.png";
+        a.click();
+    });
+
+    // Reset
+    document.getElementById("reset-preview").addEventListener("click", () => {
+        logoImg = null;
+        dragX = dragY = 0;
+        textValue = "";
+        document.getElementById("preview-text").value = "";
+        draw();
+    });
+
+    draw();
+</script>
+</body>
+</html>
