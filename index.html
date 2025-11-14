@@ -26,7 +26,7 @@
         display: block;
         margin-bottom: 10px;
         cursor: grab;
-        background: #ffffff; /* чист бял фон под купола */
+        background: #ffffff;
         box-shadow: 0 0 20px rgba(0,0,0,0.35);
     }
 
@@ -49,7 +49,8 @@
     .dome-input,
     #font-select,
     #text-color,
-    #preview-text {
+    #preview-text,
+    #text-layout {
         width: 100%;
         padding: 8px;
         margin-bottom: 8px;
@@ -117,16 +118,23 @@
         <div class="dome-label">Type your text</div>
         <input id="preview-text" placeholder="Type your text..." class="dome-input">
 
+        <div class="dome-label">Text layout</div>
+        <select id="text-layout" class="dome-input">
+            <option value="straight">Straight</option>
+            <option value="top-arc">Top arc</option>
+            <option value="bottom-arc">Bottom arc</option>
+        </select>
+
         <div class="dome-label">Upload your logo (preview only)</div>
         <input type="file" id="logo-upload" accept="image/*" class="dome-input">
 
         <div class="dome-label">Background</div>
         <div id="bg-colors">
-            <button data-bg="white" style="background:#fff"></button>
-            <button data-bg="black" style="background:#000"></button>
-            <button data-bg="silver" style="background:linear-gradient(145deg,#ddd,#999)"></button>
-            <button data-bg="red" style="background:#b00000"></button>
-            <button data-bg="blue" style="background:#003dff"></button>
+            <button data-bg="white" style="background:#ffffff"></button>
+            <button data-bg="black" style="background:#000000"></button>
+            <button data-bg="silver" style="background:linear-gradient(145deg,#eeeeee,#bdbdbd)"></button>
+            <button data-bg="red" style="background:#e00000"></button>
+            <button data-bg="blue" style="background:#0055ff"></button>
         </div>
 
         <div class="dome-label">Font</div>
@@ -168,128 +176,169 @@
   const canvas = document.getElementById("dome-canvas");
   const ctx = canvas.getContext("2d");
 
-  // ---------------- STATE ----------------
-  let bgKey = "white"; // white, black, red, blue, silver
+  const CX = 400;
+  const CY = 400;
+  const R  = 380;
+
+  let bgKey = "white";
   let textValue = "";
   let textSize = 60;
   let textColor = "#ffffff";
   let fontName = "Montserrat Medium";
+  let textLayout = "straight";
   let logoImg = null;
   let logoZoom = 1;
   let dragX = 0, dragY = 0;
   let dragging = false;
   let startX = 0, startY = 0;
 
-  const CX = 400;
-  const CY = 400;
-  const R  = 380;
+  // SMOLA
+  const highlightImg = new Image();
+  highlightImg.src = "smola.png";
 
-  // --------------- DOME / RESIN BACKGROUND ---------------
-  function drawDomeBackground() {
+  function drawBackground() {
     ctx.save();
 
-    // BASE GRADIENT (цвят + купол)
-    let light, mid, edge;
+    let baseColor = "#ffffff";
 
     switch (bgKey) {
       case "black":
-        light = "#555555";
-        mid   = "#141414";
-        edge  = "#000000";
+        baseColor = "#111111";
         break;
       case "red":
-        light = "#ffb3b3";
-        mid   = "#e00000";
-        edge  = "#5a0000";
+        baseColor = "#e00000";
         break;
       case "blue":
-        light = "#9fc7ff";
-        mid   = "#0055ff";
-        edge  = "#00133d";
+        baseColor = "#0055ff";
         break;
       case "silver":
-        light = "#f8f8f8";
-        mid   = "#c0c0c0";
-        edge  = "#7d7d7d";
-        break;
+        const silverGrad = ctx.createRadialGradient(CX, CY, R*0.1, CX, CY, R);
+        silverGrad.addColorStop(0.0, "#f7f7f7");
+        silverGrad.addColorStop(1.0, "#bdbdbd");
+        ctx.fillStyle = silverGrad;
+        ctx.beginPath();
+        ctx.arc(CX, CY, R, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
       case "white":
       default:
-        light = "#ffffff";
-        mid   = "#f7f7f7";
-        edge  = "#e0e0e0";
+        baseColor = "#ffffff";
         break;
     }
 
-    const baseGrad = ctx.createRadialGradient(
-      CX - R * 0.3, CY - R * 0.3, R * 0.1,
-      CX, CY, R
-    );
-    baseGrad.addColorStop(0.0, light);
-    baseGrad.addColorStop(0.6, mid);
-    baseGrad.addColorStop(1.0, edge);
-
-    ctx.fillStyle = baseGrad;
+    ctx.fillStyle = baseColor;
     ctx.beginPath();
     ctx.arc(CX, CY, R, 0, Math.PI * 2);
-    ctx.fill();
-
-    // GLOSS / RESIN OVERLAY (силен гланц)
-    const glossGrad = ctx.createLinearGradient(
-      CX - R, CY - R,
-      CX + R, CY + R
-    );
-    glossGrad.addColorStop(0.0, "rgba(255,255,255,0.9)");
-    glossGrad.addColorStop(0.35, "rgba(255,255,255,0.25)");
-    glossGrad.addColorStop(0.55, "rgba(255,255,255,0.00)");
-    glossGrad.addColorStop(1.0, "rgba(0,0,0,0.40)");
-
-    ctx.fillStyle = glossGrad;
-    ctx.beginPath();
-    ctx.arc(CX, CY, R, 0, Math.PI * 2);
-    ctx.fill();
-
-    // HOTSPOT – елипсовидно отражение, типична смола
-    ctx.beginPath();
-    ctx.ellipse(
-      CX - R * 0.3,
-      CY - R * 0.35,
-      R * 0.45,
-      R * 0.25,
-      -0.6,
-      0,
-      Math.PI * 2
-    );
-    ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.fill();
 
     ctx.restore();
   }
 
-  // --------------- MAIN DRAW ----------------
+  function drawSmola() {
+    if (!highlightImg.complete) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.clip();
+
+    const imgSize = Math.max(highlightImg.width, highlightImg.height) || 1;
+    const scale   = (R*2) / imgSize;
+
+    const drawW = highlightImg.width  * scale;
+    const drawH = highlightImg.height * scale;
+
+    const dx = CX - drawW / 2;
+    const dy = CY - drawH / 2;
+
+    ctx.drawImage(highlightImg, dx, dy, drawW, drawH);
+
+    ctx.restore();
+  }
+
+  // помощна функция за извити текстове
+  function drawArcText(text, radius, centerAngle, invert) {
+    if (!text) return;
+
+    ctx.save();
+    ctx.fillStyle = textColor;
+    ctx.font = `${textSize}px "${fontName}"`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const chars = text.split("");
+    const metrics = chars.map(ch => ctx.measureText(ch).width);
+    const totalWidth = metrics.reduce((a, b) => a + b, 0);
+
+    // колко радиана заема текста
+    const arcLength = totalWidth / radius;
+    let startAngle = centerAngle - arcLength / 2;
+
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      const w = metrics[i];
+      const charAngle = startAngle + (w / 2) / radius;
+
+      const angle = invert ? charAngle + Math.PI : charAngle;
+      const x = CX + radius * Math.cos(angle);
+      const y = CY + radius * Math.sin(angle);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle + (invert ? Math.PI : 0));
+      ctx.fillText(ch, 0, invert ? textSize * 0.25 : -textSize * 0.25);
+      ctx.restore();
+
+      startAngle += w / radius;
+    }
+
+    ctx.restore();
+  }
+
+  function drawText() {
+    if (!textValue.trim()) return;
+
+    if (textLayout === "straight") {
+      ctx.font = `${textSize}px "${fontName}"`;
+      ctx.fillStyle = textColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(textValue, CX, CY + R * 0.05);
+      return;
+    }
+
+    if (textLayout === "top-arc") {
+      const radius = R * 0.7;
+      const centerAngle = -Math.PI / 2; // горе
+      drawArcText(textValue, radius, centerAngle, false);
+      return;
+    }
+
+    if (textLayout === "bottom-arc") {
+      const radius = R * 0.7;
+      const centerAngle = Math.PI / 2; // долу
+      drawArcText(textValue, radius, centerAngle, true);
+      return;
+    }
+  }
+
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // background + resin
-    drawDomeBackground();
+    drawBackground();
 
-    // LOGO
     if (logoImg) {
       let w = logoImg.width * logoZoom;
       let h = logoImg.height * logoZoom;
       ctx.drawImage(logoImg, CX - w / 2 + dragX, CY - h / 2 + dragY, w, h);
     }
 
-    // TEXT
-    if (textValue.trim() !== "") {
-      ctx.font = `${textSize}px "${fontName}"`;
-      ctx.fillStyle = textColor;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(textValue, CX, CY + R * 0.05);
-    }
+    drawText();
+
+    drawSmola();
   }
 
-  // --------------- INTERACTION: DRAG LOGO ----------------
+  // drag logo
   canvas.addEventListener("mousedown", e => {
     dragging = true;
     startX = e.offsetX - dragX;
@@ -305,8 +354,7 @@
   canvas.addEventListener("mouseup", () => dragging = false);
   canvas.addEventListener("mouseleave", () => dragging = false);
 
-  // --------------- UI BINDINGS ----------------
-  // Background buttons
+  // background
   document.querySelectorAll("#bg-colors button").forEach(btn => {
     btn.addEventListener("click", () => {
       bgKey = btn.dataset.bg;
@@ -314,28 +362,29 @@
     });
   });
 
-  // Text
+  // text
   document.getElementById("preview-text").addEventListener("input", e => {
     textValue = e.target.value;
     draw();
   });
-
   document.getElementById("text-size").addEventListener("input", e => {
     textSize = Number(e.target.value);
     draw();
   });
-
   document.getElementById("text-color").addEventListener("change", e => {
     textColor = e.target.value;
     draw();
   });
-
   document.getElementById("font-select").addEventListener("change", e => {
     fontName = e.target.value;
     draw();
   });
+  document.getElementById("text-layout").addEventListener("change", e => {
+    textLayout = e.target.value;
+    draw();
+  });
 
-  // Logo upload
+  // logo upload
   document.getElementById("logo-upload").addEventListener("change", e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -348,13 +397,13 @@
     reader.readAsDataURL(file);
   });
 
-  // Logo zoom
+  // logo zoom
   document.getElementById("logo-zoom").addEventListener("input", e => {
     logoZoom = Number(e.target.value);
     draw();
   });
 
-  // Save PNG
+  // save
   document.getElementById("save-preview").addEventListener("click", () => {
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
@@ -362,17 +411,20 @@
     a.click();
   });
 
-  // Reset
+  // reset
   document.getElementById("reset-preview").addEventListener("click", () => {
-    logoImg  = null;
-    dragX    = 0;
-    dragY    = 0;
+    logoImg   = null;
+    dragX     = 0;
+    dragY     = 0;
     textValue = "";
     document.getElementById("preview-text").value = "";
     draw();
   });
 
-  // Initial render
+  highlightImg.onload = () => {
+    draw();
+  };
+
   draw();
 </script>
 
