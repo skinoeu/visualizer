@@ -2,115 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Skino Custom Dome Preview</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Custom Design Wheel Center Cap Preview</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f7;
-      color: #111;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
     }
-
     .page {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
     }
-
-    .wrapper {
-      display: flex;
-      gap: 32px;
-      max-width: 1100px;
-      width: 100%;
+    .card {
       background: #ffffff;
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
-      border-radius: 18px;
-      padding: 32px;
+      border-radius: 24px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      max-width: 1180px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 40px;
+      padding: 32px 40px;
     }
-
     @media (max-width: 900px) {
-      .wrapper {
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
+      .card {
+        grid-template-columns: 1fr;
+        padding: 24px;
       }
     }
-
-    .canvas-panel {
-      flex: 1;
+    .preview-wrap {
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
     #dome-canvas {
-      width: 420px;
-      height: 420px;
+      width: 380px;
+      height: 380px;
       max-width: 100%;
+      border-radius: 50%;
       display: block;
+      box-shadow: 0 22px 40px rgba(15, 23, 42, 0.25);
+      background: transparent;
     }
 
-    .controls-panel {
-      flex: 1;
-      max-width: 420px;
+    .controls h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      font-weight: 700;
     }
-
-    h1 {
-      font-size: 20px;
-      margin: 0 0 8px;
-    }
-
-    p.helper {
-      font-size: 12px;
-      color: #666;
+    .controls p {
       margin: 0 0 18px;
+      font-size: 13px;
+      color: #6b7280;
       line-height: 1.4;
     }
 
     .field {
       margin-bottom: 14px;
     }
-
-    .field label {
+    .field-label {
       font-size: 13px;
       font-weight: 600;
-      display: block;
+      color: #4b5563;
       margin-bottom: 4px;
     }
-
-    .field input[type="text"],
-    .field select {
+    input[type="text"],
+    select {
       width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ddd;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
       font-size: 13px;
+      outline: none;
+      background: #f9fafb;
+    }
+    input[type="text"]:focus,
+    select:focus {
+      border-color: #3b82f6;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+    }
+    input[type="file"] {
+      width: 100%;
+      font-size: 12px;
     }
 
-    .background-swatches {
+    .swatches {
       display: flex;
       gap: 8px;
-      margin-top: 6px;
+      margin-top: 3px;
     }
-
-    .bg-swatch {
+    .swatch {
       width: 22px;
       height: 22px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+      border-radius: 999px;
+      border: 2px solid transparent;
       cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
     }
-
-    .bg-swatch.selected {
-      box-shadow: 0 0 0 2px #007bff;
+    .swatch.is-active {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.5);
     }
 
     .slider-row {
@@ -118,13 +116,12 @@
       align-items: center;
       gap: 10px;
     }
-
     .slider-row span {
-      font-size: 12px;
-      color: #555;
-      min-width: 52px;
+      font-size: 11px;
+      color: #6b7280;
+      min-width: 40px;
+      text-align: right;
     }
-
     input[type="range"] {
       flex: 1;
     }
@@ -132,444 +129,457 @@
     .buttons {
       display: flex;
       gap: 10px;
-      margin-top: 16px;
+      margin-top: 18px;
     }
-
     .btn {
       flex: 1;
-      padding: 10px 14px;
       border-radius: 999px;
       border: none;
-      cursor: pointer;
+      padding: 10px 14px;
       font-size: 13px;
       font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.12s ease;
     }
-
     .btn-primary {
-      background: #007bff;
-      color: #fff;
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
     }
-
     .btn-primary:hover {
-      background: #0063d5;
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .btn-secondary:hover {
+      background: #e5e7eb;
+      transform: translateY(-1px);
     }
 
-    .btn-ghost {
-      background: #f2f2f2;
-      color: #333;
-    }
-
-    .btn-ghost:hover {
-      background: #e1e1e1;
-    }
-
-    .note {
+    .hint {
+      margin-top: 16px;
       font-size: 11px;
-      color: #777;
-      margin-top: 10px;
-      line-height: 1.4;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+    .hint strong {
+      color: #6b7280;
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="wrapper">
-      <div class="canvas-panel">
-        <canvas id="dome-canvas" width="500" height="500"></canvas>
+<div class="page">
+  <div class="card">
+    <div class="preview-wrap">
+      <canvas id="dome-canvas" width="760" height="760"></canvas>
+    </div>
+
+    <div class="controls">
+      <h1>Custom Design Wheel Center Cap Preview</h1>
+      <p>
+        This live preview helps you position your custom text and logo before saving
+        the final PNG for upload on byskino.com.
+      </p>
+
+      <div class="field">
+        <div class="field-label">Type your text</div>
+        <input id="text-input" type="text" placeholder="Your text…" />
       </div>
 
-      <div class="controls-panel">
-        <h1>Custom Design Wheel Center Cap Preview</h1>
-        <p class="helper">
-          This live preview helps you position your custom text and logo before saving the final PNG for upload on byskino.com.
-        </p>
+      <div class="field">
+        <div class="field-label">Upload your logo (preview only)</div>
+        <input id="logo-upload" type="file" accept="image/*" />
+      </div>
 
-        <div class="field">
-          <label for="preview-text">Type your text</label>
-          <input id="preview-text" type="text" placeholder="Type your text…" />
+      <div class="field">
+        <div class="field-label">Background</div>
+        <div class="swatches" id="bg-swatches">
+          <div class="swatch is-active" data-color="#ffffff" style="background:#ffffff"></div>
+          <div class="swatch" data-color="#111111" style="background:#111111"></div>
+          <div class="swatch" data-color="#7b7b7b" style="background:#7b7b7b"></div>
+          <div class="swatch" data-color="#e11d48" style="background:#e11d48"></div>
+          <div class="swatch" data-color="#2563eb" style="background:#2563eb"></div>
         </div>
+      </div>
 
-        <div class="field">
-          <label for="text-layout">Text layout</label>
-          <select id="text-layout">
-            <option value="straight">Straight</option>
-            <option value="top">Top arc</option>
-            <option value="bottom">Bottom arc</option>
-          </select>
+      <div class="field">
+        <div class="field-label">Font</div>
+        <select id="font-select">
+          <option value="Montserrat, system-ui, sans-serif" selected>Montserrat Medium</option>
+          <option value="Franklin Gothic Medium, Arial, sans-serif">Franklin Gothic Medium</option>
+          <option value="'Times New Roman', serif">Classic Serif</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Text color</div>
+        <select id="text-color-select">
+          <option value="#ffffff">White</option>
+          <option value="#111111">Black</option>
+          <option value="#facc15">Yellow</option>
+          <option value="#e5e7eb">Light grey</option>
+          <option value="#60a5fa">Ice blue</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Text size</div>
+        <div class="slider-row">
+          <input id="text-size" type="range" min="24" max="80" value="42" />
+          <span id="text-size-label">42 px</span>
         </div>
+      </div>
 
-        <div class="field">
-          <label for="logo-upload">Upload your logo (preview only)</label>
-          <input id="logo-upload" type="file" accept="image/*" />
+      <div class="field">
+        <div class="field-label">Logo zoom</div>
+        <div class="slider-row">
+          <input id="logo-zoom" type="range" min="40" max="130" value="90" />
+          <span id="logo-zoom-label">90%</span>
         </div>
+      </div>
 
-        <div class="field">
-          <label>Background</label>
-          <div class="background-swatches" id="bg-swatches">
-            <div class="bg-swatch selected" data-color="#ffffff" style="background:#ffffff"></div>
-            <div class="bg-swatch" data-color="#111111" style="background:#111111"></div>
-            <div class="bg-swatch" data-color="#555555" style="background:#555555"></div>
-            <div class="bg-swatch" data-color="#d31b23" style="background:#d31b23"></div>
-            <div class="bg-swatch" data-color="#0066ff" style="background:#0066ff"></div>
-          </div>
-        </div>
+      <div class="buttons">
+        <button id="save-btn" class="btn btn-primary">Save preview (PNG)</button>
+        <button id="reset-btn" class="btn btn-secondary">Reset</button>
+      </div>
 
-        <div class="field">
-          <label for="font-select">Font</label>
-          <select id="font-select">
-            <option value="Montserrat Medium">Montserrat Medium</option>
-            <option value="Franklin Gothic Demi">Franklin Gothic Demi</option>
-            <option value="Arial">Arial</option>
-            <option value="Verdana">Verdana</option>
-            <option value="Times New Roman">Times New Roman</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="text-color">Text color</label>
-          <select id="text-color">
-            <option value="#ffffff">White</option>
-            <option value="#000000">Black</option>
-            <option value="#222222">Dark grey</option>
-            <option value="#f0f0f0">Light grey</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Text size</label>
-          <div class="slider-row">
-            <span id="text-size-label">42 px</span>
-            <input id="text-size" type="range" min="20" max="70" value="42" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Logo zoom</label>
-          <div class="slider-row">
-            <span id="logo-zoom-label">80%</span>
-            <input id="logo-zoom" type="range" min="40" max="120" value="80" />
-          </div>
-        </div>
-
-        <div class="buttons">
-          <button class="btn btn-primary" id="save-btn">Save preview (PNG)</button>
-          <button class="btn btn-ghost" id="reset-btn">Reset</button>
-        </div>
-
-        <p class="note">
-          After saving, upload the PNG in the “Upload your design” field of the product page on byskino.com. This preview
-          is only for positioning your logo and text.
-        </p>
+      <div class="hint">
+        <strong>Tip:</strong> Drag the <strong>logo</strong> and the <strong>text</strong> with your mouse to position them
+        exactly where you want on the cap. After saving, upload the PNG in the
+        “Upload your design” field of the product page on byskino.com.
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // --- Canvas & basic setup -------------------------------------------------
-    const canvas = document.getElementById("dome-canvas");
-    const ctx = canvas.getContext("2d");
+<script>
+  const canvas = document.getElementById('dome-canvas');
+  const ctx = canvas.getContext('2d');
 
-    const size = canvas.width;
-    const centerX = size / 2;
-    const centerY = size / 2;
-    const circleRadius = size * 0.38; // основен кръг
-    const textRadius = circleRadius * 0.78; // радиус за текста
+  // Base disc parameters
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const discRadius = 320;
 
-    // --- Controls -------------------------------------------------------------
-    const textInput = document.getElementById("preview-text");
-    const textLayoutSelect = document.getElementById("text-layout");
-    const logoUpload = document.getElementById("logo-upload");
-    const bgSwatches = document.getElementById("bg-swatches");
-    const fontSelect = document.getElementById("font-select");
-    const textColorSelect = document.getElementById("text-color");
-    const textSizeSlider = document.getElementById("text-size");
-    const textSizeLabel = document.getElementById("text-size-label");
-    const logoZoomSlider = document.getElementById("logo-zoom");
-    const logoZoomLabel = document.getElementById("logo-zoom-label");
-    const saveBtn = document.getElementById("save-btn");
-    const resetBtn = document.getElementById("reset-btn");
+  // State
+  let bgColor = '#ffffff';
 
-    // --- State ----------------------------------------------------------------
-    let currentBgColor = "#ffffff";
-    let currentText = "";
-    let currentTextLayout = "straight";
-    let currentFont = "Montserrat Medium";
-    let currentTextColor = "#ffffff";
-    let currentTextSize = parseInt(textSizeSlider.value, 10);
+  // resin highlight
+  const smolaImg = new Image();
+  smolaImg.src = 'SMOLA.png';
 
-    let logoImage = null;
-    let logoZoom = parseInt(logoZoomSlider.value, 10); // percentage
+  // Logo state
+  let logoImg = null;
+  let logoScale = 0.9; // 0.4 – 1.3
+  let logoX = centerX;
+  let logoY = centerY;
+  const logoBaseSize = discRadius * 1.3;
 
-    // Resin (smola) overlay
-    const smolaImage = new Image();
-    let smolaLoaded = false;
-    smolaImage.onload = () => {
-      smolaLoaded = true;
-      draw();
-    };
-    smolaImage.src = "SMOLA.png";
+  // Text state
+  let textValue = '';
+  let textFontFamily = "Montserrat, system-ui, sans-serif";
+  let textSize = 42;
+  let textColor = '#ffffff';
+  let textX = centerX;
+  let textY = centerY; // start in center
 
-    // --- Utility: background picker ------------------------------------------
-    bgSwatches.addEventListener("click", (e) => {
-      const swatch = e.target.closest(".bg-swatch");
-      if (!swatch) return;
-      currentBgColor = swatch.dataset.color;
+  // Dragging
+  let isDraggingLogo = false;
+  let isDraggingText = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
 
-      [...bgSwatches.querySelectorAll(".bg-swatch")].forEach((el) =>
-        el.classList.remove("selected")
-      );
-      swatch.classList.add("selected");
-      draw();
-    });
+  // ---------- Helpers ----------
+  function drawBase() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // --- Inputs listeners -----------------------------------------------------
-    textInput.addEventListener("input", () => {
-      currentText = textInput.value.trim();
-      draw();
-    });
+    // background circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, discRadius, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fillStyle = bgColor;
+    ctx.fill();
 
-    textLayoutSelect.addEventListener("change", () => {
-      currentTextLayout = textLayoutSelect.value;
-      draw();
-    });
+    // subtle inner shading for depth
+    const grad = ctx.createRadialGradient(
+      centerX - discRadius * 0.25,
+      centerY - discRadius * 0.25,
+      discRadius * 0.2,
+      centerX,
+      centerY,
+      discRadius * 1.2
+    );
+    grad.addColorStop(0, 'rgba(255,255,255,0.25)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = grad;
+    ctx.fill();
 
-    fontSelect.addEventListener("change", () => {
-      currentFont = fontSelect.value;
-      draw();
-    });
+    ctx.restore();
 
-    textColorSelect.addEventListener("change", () => {
-      currentTextColor = textColorSelect.value;
-      draw();
-    });
+    // outer white rim
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, discRadius + 22, 0, Math.PI * 2);
+    ctx.lineWidth = 40;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+    ctx.restore();
 
-    textSizeSlider.addEventListener("input", () => {
-      currentTextSize = parseInt(textSizeSlider.value, 10);
-      textSizeLabel.textContent = currentTextSize + " px";
-      draw();
-    });
-
-    logoZoomSlider.addEventListener("input", () => {
-      logoZoom = parseInt(logoZoomSlider.value, 10);
-      logoZoomLabel.textContent = logoZoom + "%";
-      draw();
-    });
-
-    logoUpload.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        logoImage = null;
-        draw();
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img.onload = () => {
-          logoImage = img;
-          draw();
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // --- Draw helpers ---------------------------------------------------------
-
-    function clearCanvas() {
-      ctx.clearRect(0, 0, size, size);
-    }
-
-    function drawBaseCircle() {
-      // Shadow
+    // draw SMOLA highlight on top
+    if (smolaImg.complete) {
       ctx.save();
+      ctx.clip(); // clip to disc
       ctx.beginPath();
-      ctx.arc(centerX, centerY, circleRadius + 8, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0,0,0,0.22)";
-      ctx.filter = "blur(16px)";
-      ctx.fill();
-      ctx.restore();
-
-      // Colored circle
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
-      ctx.fillStyle = currentBgColor;
-      ctx.fill();
-      ctx.restore();
-
-      // Resin overlay (Smola)
-      if (smolaLoaded) {
-        ctx.save();
-        ctx.globalAlpha = 0.95;
-        ctx.drawImage(
-          smolaImage,
-          centerX - circleRadius,
-          centerY - circleRadius,
-          circleRadius * 2,
-          circleRadius * 2
-        );
-        ctx.restore();
-      }
-    }
-
-    function drawLogo() {
-      if (!logoImage) return;
-      const maxLogoRadius = circleRadius * 0.55;
-      const scale = (logoZoom / 100) * (maxLogoRadius / Math.max(logoImage.width, logoImage.height));
-      const drawWidth = logoImage.width * scale;
-      const drawHeight = logoImage.height * scale;
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, maxLogoRadius, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, discRadius, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
+
+      // slightly larger than disc
+      const size = discRadius * 2.2;
+      ctx.globalAlpha = 0.95;
       ctx.drawImage(
-        logoImage,
-        centerX - drawWidth / 2,
-        centerY - drawHeight / 2,
-        drawWidth,
-        drawHeight
+        smolaImg,
+        centerX - size / 2,
+        centerY - size / 2,
+        size,
+        size
       );
       ctx.restore();
     }
+  }
 
-    function drawStraightText() {
-      if (!currentText) return;
-      ctx.save();
-      ctx.font = currentTextSize + "px '" + currentFont + "'";
-      ctx.fillStyle = currentTextColor;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(0,0,0,0.45)";
-      ctx.shadowBlur = 4;
-      ctx.fillText(currentText, centerX, centerY);
-      ctx.restore();
+  function drawLogo() {
+    if (!logoImg) return;
+    ctx.save();
+    const w = logoBaseSize * logoScale;
+    const h = logoBaseSize * logoScale;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, discRadius - 8, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(logoImg, logoX - w / 2, logoY - h / 2, w, h);
+    ctx.restore();
+  }
+
+  function drawText() {
+    if (!textValue) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, discRadius - 16, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.font = textSize + 'px ' + textFontFamily;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = textColor;
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
+
+    ctx.fillText(textValue, textX, textY);
+    ctx.restore();
+  }
+
+  function redraw() {
+    drawBase();
+    drawLogo();
+    drawText();
+  }
+
+  // -------------- Event wiring --------------
+  // background swatches
+  document.getElementById('bg-swatches').addEventListener('click', (e) => {
+    const sw = e.target.closest('.swatch');
+    if (!sw) return;
+    bgColor = sw.dataset.color;
+    document.querySelectorAll('#bg-swatches .swatch').forEach(s => s.classList.remove('is-active'));
+    sw.classList.add('is-active');
+    redraw();
+  });
+
+  // text input
+  document.getElementById('text-input').addEventListener('input', (e) => {
+    textValue = e.target.value;
+    redraw();
+  });
+
+  // font
+  document.getElementById('font-select').addEventListener('change', (e) => {
+    textFontFamily = e.target.value;
+    redraw();
+  });
+
+  // text color
+  document.getElementById('text-color-select').addEventListener('change', (e) => {
+    textColor = e.target.value;
+    redraw();
+  });
+
+  // text size
+  const textSizeSlider = document.getElementById('text-size');
+  const textSizeLabel = document.getElementById('text-size-label');
+  textSizeSlider.addEventListener('input', (e) => {
+    textSize = parseInt(e.target.value, 10);
+    textSizeLabel.textContent = textSize + ' px';
+    redraw();
+  });
+
+  // logo zoom
+  const logoZoomSlider = document.getElementById('logo-zoom');
+  const logoZoomLabel = document.getElementById('logo-zoom-label');
+  logoZoomSlider.addEventListener('input', (e) => {
+    logoScale = parseInt(e.target.value, 10) / 100;
+    logoZoomLabel.textContent = e.target.value + '%';
+    redraw();
+  });
+
+  // logo upload
+  document.getElementById('logo-upload').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        logoImg = img;
+        logoX = centerX;
+        logoY = centerY;
+        redraw();
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---------- Drag logic ----------
+  function getCanvasCoords(evt) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (evt.clientX - rect.left) * (canvas.width / rect.width),
+      y: (evt.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }
+
+  function isPointOnLogo(x, y) {
+    if (!logoImg) return false;
+    const w = logoBaseSize * logoScale;
+    const h = logoBaseSize * logoScale;
+    return (
+      x >= logoX - w / 2 &&
+      x <= logoX + w / 2 &&
+      y >= logoY - h / 2 &&
+      y <= logoY + h / 2
+    );
+  }
+
+  function isPointOnText(x, y) {
+    if (!textValue) return false;
+    ctx.save();
+    ctx.font = textSize + 'px ' + textFontFamily;
+    const metrics = ctx.measureText(textValue);
+    ctx.restore();
+    const textWidth = metrics.width;
+    const textHeight = textSize * 1.2;
+
+    return (
+      x >= textX - textWidth / 2 &&
+      x <= textX + textWidth / 2 &&
+      y >= textY - textHeight / 2 &&
+      y <= textY + textHeight / 2
+    );
+  }
+
+  canvas.addEventListener('mousedown', (evt) => {
+    const { x, y } = getCanvasCoords(evt);
+
+    if (isPointOnLogo(x, y)) {
+      isDraggingLogo = true;
+      isDraggingText = false;
+      dragOffsetX = x - logoX;
+      dragOffsetY = y - logoY;
+    } else if (isPointOnText(x, y)) {
+      isDraggingText = true;
+      isDraggingLogo = false;
+      dragOffsetX = x - textX;
+      dragOffsetY = y - textY;
     }
+  });
 
-    // Огънат текст – истинска дъга
-    function drawArcText(text, radius, position) {
-      if (!text) return;
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.font = currentTextSize + "px '" + currentFont + "'";
-      ctx.fillStyle = currentTextColor;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(0,0,0,0.45)";
-      ctx.shadowBlur = 4;
+  window.addEventListener('mousemove', (evt) => {
+    if (!isDraggingLogo && !isDraggingText) return;
+    const { x, y } = getCanvasCoords(evt);
 
-      const chars = text.split("");
-      const spacing = currentTextSize * 0.12; // разстояние между символите
-
-      const widths = chars.map((ch) => ctx.measureText(ch).width);
-      const totalWidth =
-        widths.reduce((sum, w) => sum + w, 0) + spacing * (chars.length - 1);
-      const totalAngle = totalWidth / radius; // в радиани
-
-      if (position === "top") {
-        // Горна дъга – центрирана
-        let currentAngle = -Math.PI / 2 - totalAngle / 2; // започваме от ляво
-        for (let i = 0; i < chars.length; i++) {
-          const w = widths[i];
-          const charAngle = (w + spacing) / radius;
-          const angle = currentAngle + charAngle / 2;
-
-          ctx.save();
-          ctx.rotate(angle);
-          ctx.translate(0, -radius);
-          ctx.rotate(Math.PI / 2);
-          ctx.fillText(chars[i], 0, 0);
-          ctx.restore();
-
-          currentAngle += charAngle;
-        }
-      } else if (position === "bottom") {
-        // Долна дъга – текстът се чете нормално (вариант А)
-        let currentAngle = Math.PI / 2 + totalAngle / 2; // започваме от ляво
-        for (let i = 0; i < chars.length; i++) {
-          const w = widths[i];
-          const charAngle = (w + spacing) / radius;
-          const angle = currentAngle - charAngle / 2;
-
-          ctx.save();
-          ctx.rotate(angle);
-          ctx.translate(0, -radius);
-          ctx.rotate(-Math.PI / 2); // за да не е на обратно
-          ctx.fillText(chars[i], 0, 0);
-          ctx.restore();
-
-          currentAngle -= charAngle;
-        }
-      }
-
-      ctx.restore();
+    if (isDraggingLogo) {
+      logoX = x - dragOffsetX + dragOffsetX;
+      logoY = y - dragOffsetY + dragOffsetY;
+    } else if (isDraggingText) {
+      textX = x - dragOffsetX + dragOffsetX;
+      textY = y - dragOffsetY + dragOffsetY;
     }
+    redraw();
+  });
 
-    function drawText() {
-      if (!currentText) return;
-      if (currentTextLayout === "straight") {
-        drawStraightText();
-      } else if (currentTextLayout === "top") {
-        drawArcText(currentText, textRadius, "top");
-      } else if (currentTextLayout === "bottom") {
-        drawArcText(currentText, textRadius, "bottom");
-      }
-    }
+  window.addEventListener('mouseup', () => {
+    isDraggingLogo = false;
+    isDraggingText = false;
+  });
 
-    function draw() {
-      clearCanvas();
-      drawBaseCircle();
-      drawLogo();
-      drawText();
-    }
+  // ---------- Save & reset ----------
+  document.getElementById('save-btn').addEventListener('click', () => {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = 1000;
+    exportCanvas.height = 1000;
+    const ex = exportCanvas.getContext('2d');
 
-    // --- Save PNG -------------------------------------------------------------
-    saveBtn.addEventListener("click", () => {
-      const link = document.createElement("a");
-      link.download = "custom-dome-preview.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
+    // simple scale factor from preview → export
+    const scale = exportCanvas.width / canvas.width;
+    ex.scale(scale, scale);
+    ex.drawImage(canvas, 0, 0);
 
-    // --- Reset ---------------------------------------------------------------
-    resetBtn.addEventListener("click", () => {
-      textInput.value = "";
-      currentText = "";
-      textLayoutSelect.value = "straight";
-      currentTextLayout = "straight";
+    const link = document.createElement('a');
+    link.download = 'custom-dome-preview.png';
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
+  });
 
-      fontSelect.value = "Montserrat Medium";
-      currentFont = "Montserrat Medium";
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    bgColor = '#ffffff';
+    document.querySelectorAll('#bg-swatches .swatch').forEach(s => s.classList.remove('is-active'));
+    document.querySelector('#bg-swatches .swatch[data-color="#ffffff"]').classList.add('is-active');
 
-      textColorSelect.value = "#ffffff";
-      currentTextColor = "#ffffff";
+    textValue = '';
+    document.getElementById('text-input').value = '';
+    textFontFamily = "Montserrat, system-ui, sans-serif";
+    document.getElementById('font-select').value = textFontFamily;
+    textColor = '#ffffff';
+    document.getElementById('text-color-select').value = textColor;
+    textSize = 42;
+    textSizeSlider.value = 42;
+    textSizeLabel.textContent = '42 px';
+    textX = centerX;
+    textY = centerY;
 
-      textSizeSlider.value = 42;
-      currentTextSize = 42;
-      textSizeLabel.textContent = "42 px";
+    logoImg = null;
+    document.getElementById('logo-upload').value = '';
+    logoScale = 0.9;
+    logoZoomSlider.value = 90;
+    logoZoomLabel.textContent = '90%';
+    logoX = centerX;
+    logoY = centerY;
 
-      logoZoomSlider.value = 80;
-      logoZoom = 80;
-      logoZoomLabel.textContent = "80%";
+    redraw();
+  });
 
-      logoUpload.value = "";
-      logoImage = null;
-
-      // reset background
-      currentBgColor = "#ffffff";
-      [...bgSwatches.querySelectorAll(".bg-swatch")].forEach((el, idx) =>
-        el.classList.toggle("selected", idx === 0)
-      );
-
-      draw();
-    });
-
-    // --- Initial draw --------------------------------------------------------
-    textSizeLabel.textContent = currentTextSize + " px";
-    logoZoomLabel.textContent = logoZoom + "%";
-    draw();
-  </script>
+  // first draw (wait a bit for SMOLA, но и без нея се рисува)
+  smolaImg.onload = redraw;
+  setTimeout(redraw, 150);
+</script>
 </body>
 </html>
