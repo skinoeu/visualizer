@@ -164,138 +164,216 @@
 </div>
 
 <script>
-    const canvas = document.getElementById("dome-canvas");
-    const ctx = canvas.getContext("2d");
+  const canvas = document.getElementById("dome-canvas");
+  const ctx = canvas.getContext("2d");
 
-    let bgColor = "white";        // бял фон
-    let textValue = "";
-    let textSize = 60;
-    let textColor = "#000000";
-    let fontName = "Montserrat Medium";
-    let logoImg = null;
-    let logoZoom = 1;
-    let dragX = 0, dragY = 0;
-    let dragging = false;
-    let startX = 0, startY = 0;
+  // ---------------- STATE ----------------
+  let bgKey = "white"; // white, black, red, blue, silver
+  let textValue = "";
+  let textSize = 60;
+  let textColor = "#ffffff";
+  let fontName = "Montserrat Medium";
+  let logoImg = null;
+  let logoZoom = 1;
+  let dragX = 0, dragY = 0;
+  let dragging = false;
+  let startX = 0, startY = 0;
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const CX = 400;
+  const CY = 400;
+  const R  = 380;
 
-        // Background
-        ctx.fillStyle = bgColor;
-        ctx.beginPath();
-        ctx.arc(400, 400, 400, 0, Math.PI * 2);
-        ctx.fill();
+  // --------------- DOME / RESIN BACKGROUND ---------------
+  function drawDomeBackground() {
+    ctx.save();
 
-        // Resin highlight
-        let grad = ctx.createRadialGradient(300, 250, 50, 400, 400, 400);
-        grad.addColorStop(0, "rgba(255,255,255,0.40)");
-        grad.addColorStop(1, "rgba(0,0,0,0.35)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(400, 400, 400, 0, Math.PI * 2);
-        ctx.fill();
+    // BASE GRADIENT (цвят + купол)
+    let light, mid, edge;
 
-        // Logo
-        if (logoImg) {
-            let w = logoImg.width * logoZoom;
-            let h = logoImg.height * logoZoom;
-            ctx.drawImage(logoImg, 400 - w/2 + dragX, 400 - h/2 + dragY, w, h);
-        }
-
-        // Text
-        if (textValue.trim() !== "") {
-            ctx.font = textSize + 'px "' + fontName + '"';
-            ctx.fillStyle = textColor;
-            ctx.textAlign = "center";
-            ctx.fillText(textValue, 400, 420);
-        }
+    switch (bgKey) {
+      case "black":
+        light = "#555555";
+        mid   = "#141414";
+        edge  = "#000000";
+        break;
+      case "red":
+        light = "#ffb3b3";
+        mid   = "#e00000";
+        edge  = "#5a0000";
+        break;
+      case "blue":
+        light = "#9fc7ff";
+        mid   = "#0055ff";
+        edge  = "#00133d";
+        break;
+      case "silver":
+        light = "#f8f8f8";
+        mid   = "#c0c0c0";
+        edge  = "#7d7d7d";
+        break;
+      case "white":
+      default:
+        light = "#ffffff";
+        mid   = "#f4f4f4";
+        edge  = "#d8d8d8";
+        break;
     }
 
-    // Drag
-    canvas.addEventListener("mousedown", e => {
-        dragging = true;
-        startX = e.offsetX - dragX;
-        startY = e.offsetY - dragY;
-    });
-    canvas.addEventListener("mousemove", e => {
-        if (dragging) {
-            dragX = e.offsetX - startX;
-            dragY = e.offsetY - startY;
-            draw();
-        }
-    });
-    canvas.addEventListener("mouseup", () => dragging = false);
-    canvas.addEventListener("mouseleave", () => dragging = false);
+    const baseGrad = ctx.createRadialGradient(
+      CX - R * 0.3, CY - R * 0.3, R * 0.1,
+      CX, CY, R
+    );
+    baseGrad.addColorStop(0.0, light);
+    baseGrad.addColorStop(0.6, mid);
+    baseGrad.addColorStop(1.0, edge);
 
-    // Background buttons
-    document.querySelectorAll("#bg-colors button").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const color = btn.getAttribute("data-bg");
-            if (color === "white") bgColor = "#ffffff";
-            else if (color === "black") bgColor = "#000000";
-            else if (color === "silver") bgColor = "#bfbfbf";
-            else if (color === "red") bgColor = "#b00000";
-            else if (color === "blue") bgColor = "#003dff";
-            draw();
-        });
-    });
+    ctx.fillStyle = baseGrad;
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Text controls
-    document.getElementById("preview-text").addEventListener("input", e => {
-        textValue = e.target.value;
-        draw();
-    });
-    document.getElementById("text-size").addEventListener("input", e => {
-        textSize = Number(e.target.value);
-        draw();
-    });
-    document.getElementById("text-color").addEventListener("change", e => {
-        textColor = e.target.value;
-        draw();
-    });
-    document.getElementById("font-select").addEventListener("change", e => {
-        fontName = e.target.value;
-        draw();
-    });
+    // GLOSS / RESIN OVERLAY (силен гланц)
+    const glossGrad = ctx.createLinearGradient(
+      CX - R, CY - R,
+      CX + R, CY + R
+    );
+    glossGrad.addColorStop(0.0, "rgba(255,255,255,0.85)");
+    glossGrad.addColorStop(0.35, "rgba(255,255,255,0.25)");
+    glossGrad.addColorStop(0.55, "rgba(255,255,255,0.00)");
+    glossGrad.addColorStop(1.0, "rgba(0,0,0,0.40)");
 
-    // Logo upload
-    document.getElementById("logo-upload").addEventListener("change", e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        let reader = new FileReader();
-        reader.onload = function (ev) {
-            logoImg = new Image();
-            logoImg.onload = draw;
-            logoImg.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+    ctx.fillStyle = glossGrad;
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Logo zoom
-    document.getElementById("logo-zoom").addEventListener("input", e => {
-        logoZoom = Number(e.target.value);
-        draw();
-    });
+    // HOTSPOT – елипсовидно отражение, типична смола
+    ctx.beginPath();
+    ctx.ellipse(
+      CX - R * 0.3,
+      CY - R * 0.35,
+      R * 0.45,
+      R * 0.25,
+      -0.6,
+      0,
+      Math.PI * 2
+    );
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fill();
 
-    // Save PNG
-    document.getElementById("save-preview").addEventListener("click", () => {
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = "custom-dome-preview.png";
-        a.click();
-    });
+    ctx.restore();
+  }
 
-    // Reset
-    document.getElementById("reset-preview").addEventListener("click", () => {
-        logoImg = null;
-        dragX = dragY = 0;
-        textValue = "";
-        document.getElementById("preview-text").value = "";
-        draw();
-    });
+  // --------------- MAIN DRAW ----------------
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // background + resin
+    drawDomeBackground();
+
+    // LOGO
+    if (logoImg) {
+      let w = logoImg.width * logoZoom;
+      let h = logoImg.height * logoZoom;
+      ctx.drawImage(logoImg, CX - w / 2 + dragX, CY - h / 2 + dragY, w, h);
+    }
+
+    // TEXT
+    if (textValue.trim() !== "") {
+      ctx.font = `${textSize}px "${fontName}"`;
+      ctx.fillStyle = textColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(textValue, CX, CY + R * 0.05);
+    }
+  }
+
+  // --------------- INTERACTION: DRAG LOGO ----------------
+  canvas.addEventListener("mousedown", e => {
+    dragging = true;
+    startX = e.offsetX - dragX;
+    startY = e.offsetY - dragY;
+  });
+  canvas.addEventListener("mousemove", e => {
+    if (dragging) {
+      dragX = e.offsetX - startX;
+      dragY = e.offsetY - startY;
+      draw();
+    }
+  });
+  canvas.addEventListener("mouseup", () => dragging = false);
+  canvas.addEventListener("mouseleave", () => dragging = false);
+
+  // --------------- UI BINDINGS ----------------
+  // Background buttons
+  document.querySelectorAll("#bg-colors button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      bgKey = btn.dataset.bg;
+      draw();
+    });
+  });
+
+  // Text
+  document.getElementById("preview-text").addEventListener("input", e => {
+    textValue = e.target.value;
     draw();
+  });
+
+  document.getElementById("text-size").addEventListener("input", e => {
+    textSize = Number(e.target.value);
+    draw();
+  });
+
+  document.getElementById("text-color").addEventListener("change", e => {
+    textColor = e.target.value;
+    draw();
+  });
+
+  document.getElementById("font-select").addEventListener("change", e => {
+    fontName = e.target.value;
+    draw();
+  });
+
+  // Logo upload
+  document.getElementById("logo-upload").addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      logoImg = new Image();
+      logoImg.onload = draw;
+      logoImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Logo zoom
+  document.getElementById("logo-zoom").addEventListener("input", e => {
+    logoZoom = Number(e.target.value);
+    draw();
+  });
+
+  // Save PNG
+  document.getElementById("save-preview").addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = "custom-dome-preview.png";
+    a.click();
+  });
+
+  // Reset
+  document.getElementById("reset-preview").addEventListener("click", () => {
+    logoImg  = null;
+    dragX    = 0;
+    dragY    = 0;
+    textValue = "";
+    document.getElementById("preview-text").value = "";
+    draw();
+  });
+
+  // Initial render
+  draw();
 </script>
+
 </body>
 </html>
