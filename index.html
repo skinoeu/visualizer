@@ -69,7 +69,7 @@
       letter-spacing: 0.02em;
     }
     .panel p.subtitle {
-      margin: 0 0 20px;
+      margin: 0 0 18px;
       font-size: 13px;
       color: #6b7280;
     }
@@ -215,15 +215,7 @@
       <div class="field">
         <label for="preview-text">Type your text</label>
         <input id="preview-text" type="text" placeholder="BLACK EDITION" />
-      </div>
-
-      <div class="field">
-        <label for="text-layout">Text layout</label>
-        <select id="text-layout">
-          <option value="straight">Straight (free position)</option>
-          <option value="arc">Arc on rim</option>
-        </select>
-        <small>In straight mode drag the text with your mouse. In arc mode the text follows the rim.</small>
+        <small>Drag the text on the cap with your mouse to place it exactly where you want.</small>
       </div>
 
       <div class="field">
@@ -282,14 +274,6 @@
         </div>
       </div>
 
-      <div class="field" id="ring-field">
-        <label>Ring position (arc mode)</label>
-        <div class="slider-row">
-          <input id="arc-position" type="range" min="-180" max="180" value="0" />
-          <span id="arc-position-label">0°</span>
-        </div>
-      </div>
-
       <div class="field">
         <label>Logo zoom</label>
         <div class="slider-row">
@@ -304,8 +288,8 @@
       </div>
 
       <div class="help-text">
-        <strong>How to use:</strong> choose a background, type your text, pick a layout and drag the
-        text and logo on the cap. For arc mode, the text follows the rim – use <strong>Ring position</strong> to rotate it.
+        <strong>How to use:</strong> choose a background, type your text and drag it on the cap.
+        Upload your logo, drag it into position and adjust its size with <strong>Logo zoom</strong>.
         After saving, upload the PNG in the “Upload your design” field of the product on byskino.com.
       </div>
     </div>
@@ -329,7 +313,7 @@
     resinLoaded = true;
     redraw();
   };
-  resinImg.src = 'SMOLA.png';   // файлът вече е в репото
+  resinImg.src = 'SMOLA.png';
 
   // ----- STATE -----
   let bgColor = '#111111';
@@ -338,10 +322,7 @@
   let textSize = 46;
   let textColor = '#ffffff';
   let textFontFamily = 'Montserrat Medium';
-  let textLayout = 'straight'; // 'straight' | 'arc'
-  let arcOffsetDeg = 0;
 
-  // стартова позиция за прав текст
   let textPos = { x: centerX, y: centerY + 5 };
 
   let logoImg = null;
@@ -354,16 +335,12 @@
 
   // ----- UI ELEMENTS -----
   const textInput = document.getElementById('preview-text');
-  const textLayoutSelect = document.getElementById('text-layout');
   const logoUpload = document.getElementById('logo-upload');
   const bgColorRow = document.getElementById('bg-colors');
   const fontSelect = document.getElementById('font-select');
   const textColorSelect = document.getElementById('text-color');
   const textSizeSlider = document.getElementById('text-size');
   const textSizeLabel = document.getElementById('text-size-label');
-  const arcSlider = document.getElementById('arc-position');
-  const arcLabel = document.getElementById('arc-position-label');
-  const ringField = document.getElementById('ring-field');
   const logoZoomSlider = document.getElementById('logo-zoom');
   const logoZoomLabel = document.getElementById('logo-zoom-label');
   const saveBtn = document.getElementById('save-png');
@@ -382,7 +359,7 @@
     ctx.fill();
     ctx.filter = 'none';
 
-    // бял борд/ринг
+    // white ring
     ctx.beginPath();
     ctx.arc(0, 0, discRadius + 14, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff';
@@ -391,7 +368,7 @@
     ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 4;
 
-    // плътен фон (без градиент)
+    // solid background (no gradient)
     ctx.beginPath();
     ctx.arc(0, 0, discRadius, 0, Math.PI * 2);
     ctx.fillStyle = bgColor;
@@ -409,8 +386,7 @@
     ctx.restore();
   }
 
-  // прав текст
-  function drawTextStraight() {
+  function drawText() {
     if (!textValue) return;
     ctx.save();
     ctx.font = textSize + 'px ' + textFontFamily;
@@ -424,56 +400,16 @@
     ctx.restore();
   }
 
-  // текст по ринга
-  function drawTextArc() {
-    if (!textValue) return;
-
-    const radius = discRadius - 32;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, discRadius - 10, 0, Math.PI * 2);
-    ctx.clip();
-
-    ctx.translate(centerX, centerY);
-    ctx.rotate((arcOffsetDeg * Math.PI) / 180);
-
-    ctx.font = textSize + 'px ' + textFontFamily;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = textColor;
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 2;
-
-    const chars = [...textValue];
-    const widths = chars.map(ch => ctx.measureText(ch).width);
-    const totalWidth = widths.reduce((a, b) => a + b, 0);
-    const totalArc = totalWidth / radius;
-    let currentAngle = -totalArc / 2;
-
-    for (let i = 0; i < chars.length; i++) {
-      const ch = chars[i];
-      const w = widths[i];
-      const charArc = w / radius;
-      const midAngle = currentAngle + charArc / 2;
-
-      ctx.save();
-      ctx.rotate(midAngle + Math.PI / 2);
-      ctx.translate(0, -radius);
-      ctx.fillText(ch, 0, 0);
-      ctx.restore();
-
-      currentAngle += charArc;
-    }
-
-    ctx.restore();
-  }
-
   function drawLogo() {
     if (!logoImg) return;
     ctx.save();
     const size = baseLogoSize * logoScale;
+
+    // клип в кръг, за да не стърчи квадратният фон на логото
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, discRadius - 8, 0, Math.PI * 2);
+    ctx.clip();
+
     ctx.translate(logoPos.x, logoPos.y);
     ctx.shadowColor = 'rgba(0,0,0,0.45)';
     ctx.shadowBlur = 8;
@@ -486,11 +422,7 @@
     ctx.clearRect(0, 0, w, h);
     drawDiscBase();
     drawLogo();
-    if (textLayout === 'straight') {
-      drawTextStraight();
-    } else {
-      drawTextArc();
-    }
+    drawText();
     drawResinDome();
   }
 
@@ -506,8 +438,8 @@
     );
   }
 
-  function isPointInTextStraight(x, y) {
-    if (!textValue || textLayout !== 'straight') return false;
+  function isPointInText(x, y) {
+    if (!textValue) return false;
     ctx.save();
     ctx.font = textSize + 'px ' + textFontFamily;
     const width = ctx.measureText(textValue).width;
@@ -521,7 +453,7 @@
     );
   }
 
-  // ----- MOUSE DRAG -----
+  // ----- DRAG WITH MOUSE -----
   let isMouseDown = false;
 
   canvas.addEventListener('mousedown', (e) => {
@@ -534,7 +466,7 @@
       dragOffset.x = x - logoPos.x;
       dragOffset.y = y - logoPos.y;
       isMouseDown = true;
-    } else if (isPointInTextStraight(x, y)) {
+    } else if (isPointInText(x, y)) {
       draggingTarget = 'text';
       dragOffset.x = x - textPos.x;
       dragOffset.y = y - textPos.y;
@@ -551,7 +483,7 @@
     if (draggingTarget === 'logo') {
       logoPos.x = x - dragOffset.x;
       logoPos.y = y - dragOffset.y;
-    } else if (draggingTarget === 'text' && textLayout === 'straight') {
+    } else if (draggingTarget === 'text') {
       textPos.x = x - dragOffset.x;
       textPos.y = y - dragOffset.y;
     }
@@ -569,19 +501,13 @@
     redraw();
   });
 
-  textLayoutSelect.addEventListener('change', () => {
-    textLayout = textLayoutSelect.value;
-    ringField.style.display = textLayout === 'arc' ? 'block' : 'none';
-    redraw();
-  });
-
-  // фонови цветове
   function selectBgButton(btn) {
     document
       .querySelectorAll('#bg-colors .color-dot')
       .forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
   }
+
   bgColorRow.addEventListener('click', (e) => {
     const btn = e.target.closest('.color-dot');
     if (!btn) return;
@@ -589,7 +515,7 @@
     selectBgButton(btn);
     redraw();
   });
-  // по подразбиране – втория бутон (черен)
+
   const defaultBgBtn = bgColorRow.querySelectorAll('.color-dot')[1];
   selectBgButton(defaultBgBtn);
 
@@ -609,12 +535,6 @@
     redraw();
   });
 
-  arcSlider.addEventListener('input', () => {
-    arcOffsetDeg = parseInt(arcSlider.value, 10);
-    arcLabel.textContent = arcOffsetDeg + '°';
-    redraw();
-  });
-
   logoZoomSlider.addEventListener('input', () => {
     logoScale = parseInt(logoZoomSlider.value, 10) / 100;
     logoZoomLabel.textContent = logoZoomSlider.value + '%';
@@ -629,7 +549,7 @@
       const img = new Image();
       img.onload = () => {
         logoImg = img;
-        logoPos = { x: centerX, y: centerY };   // центрираме при ново лого
+        logoPos = { x: centerX, y: centerY };
         redraw();
       };
       img.src = ev.target.result;
@@ -647,15 +567,9 @@
   resetBtn.addEventListener('click', () => {
     textValue = '';
     textInput.value = '';
-    textLayout = 'straight';
-    textLayoutSelect.value = 'straight';
-    ringField.style.display = 'none';
     textSize = 46;
     textSizeSlider.value = 46;
     textSizeLabel.textContent = '46 px';
-    arcOffsetDeg = 0;
-    arcSlider.value = 0;
-    arcLabel.textContent = '0°';
     logoScale = 0.8;
     logoZoomSlider.value = 80;
     logoZoomLabel.textContent = '80%';
@@ -671,8 +585,7 @@
     redraw();
   });
 
-  // първоначално чертаене
-  ringField.style.display = 'none';
+  // initial draw
   redraw();
 </script>
 </body>
