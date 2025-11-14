@@ -1,592 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Custom Design Wheel Center Cap Preview</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    * { box-sizing: border-box; }
+<meta charset="UTF-8">
+<title>Custom Design Wheel Center Cap Preview</title>
+<style>
     body {
-      margin: 0;
-      font-family: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f4f5fb;
-      color: #111827;
-    }
-    .page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 16px;
-    }
-    .card {
-      background: #ffffff;
-      border-radius: 32px;
-      box-shadow:
-        0 18px 45px rgba(15, 23, 42, 0.10),
-        0 0 0 1px rgba(148, 163, 184, 0.20);
-      max-width: 1120px;
-      width: 100%;
-      padding: 32px 40px;
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
-      gap: 32px;
-    }
-    @media (max-width: 900px) {
-      .card {
-        grid-template-columns: 1fr;
-        padding: 24px 18px;
-        border-radius: 24px;
-      }
+        font-family: Arial, sans-serif;
+        background: #f3f5fa;
+        margin: 0;
+        padding: 0;
     }
 
-    .preview-shell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .preview-inner {
-      width: 420px;
-      max-width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 30% 20%, rgba(15,23,42,0.12), rgba(15,23,42,0.02));
-    }
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
+    .container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding-top: 50px;
     }
 
-    .panel h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0 0 4px;
-      letter-spacing: 0.02em;
-    }
-    .panel p.subtitle {
-      margin: 0 0 18px;
-      font-size: 13px;
-      color: #6b7280;
+    .wrapper {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        width: 1100px;
+        display: flex;
+        gap: 40px;
+        box-shadow: 0 0 25px rgba(0,0,0,0.08);
     }
 
-    .field {
-      margin-bottom: 14px;
-    }
-    .field label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 4px;
-      color: #374151;
-    }
-    .field small {
-      display: block;
-      font-size: 11px;
-      color: #9ca3af;
-      margin-top: 2px;
-    }
-    input[type="text"],
-    select {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      padding: 8px 10px;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      background: #f9fafb;
-    }
-    input[type="text"]:focus,
-    select:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
-      background: #ffffff;
+    /* CANVAS AREA */
+    .preview-area {
+        width: 520px;
+        height: 520px;
+        position: relative;
+        user-select: none;
     }
 
-    input[type="file"] {
-      width: 100%;
-      font-size: 13px;
+    #capCanvas {
+        width: 520px;
+        height: 520px;
+        border-radius: 50%;
     }
 
-    .color-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .color-dot {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .color-dot-inner {
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-    }
-    .color-dot.selected {
-      border-color: #2563eb;
+    /* RIGHT PANEL */
+    .controls {
+        flex: 1;
     }
 
-    .slider-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .slider-row span {
-      font-size: 11px;
-      color: #9ca3af;
-      min-width: 40px;
-      text-align: right;
-    }
     input[type="range"] {
-      width: 100%;
-      cursor: pointer;
+        width: 100%;
     }
 
-    .buttons {
-      margin-top: 18px;
-      display: flex;
-      gap: 10px;
-    }
-    button.primary,
-    button.secondary {
-      border-radius: 999px;
-      border: none;
-      padding: 9px 18px;
-      font-size: 13px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    button.primary {
-      background: #2563eb;
-      color: #ffffff;
-      box-shadow: 0 10px 20px rgba(37,99,235,0.3);
-    }
-    button.primary:hover {
-      background: #1d4ed8;
-    }
-    button.secondary {
-      background: #f3f4f6;
-      color: #374151;
-    }
-    button.secondary:hover {
-      background: #e5e7eb;
+    /* Background color selector */
+    .color-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        border: 1px solid #ccc;
+        cursor: pointer;
     }
 
-    .help-text {
-      margin-top: 14px;
-      font-size: 11px;
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-    .help-text strong {
-      color: #6b7280;
-      font-weight: 600;
-    }
-  </style>
+</style>
 </head>
 <body>
-<div class="page">
-  <div class="card">
-    <!-- CANVAS -->
-    <div class="preview-shell">
-      <div class="preview-inner">
-        <canvas id="dome-canvas" width="420" height="420"></canvas>
-      </div>
+
+<div class="container">
+    <div class="wrapper">
+
+        <!-- LEFT SIDE — PREVIEW -->
+        <div class="preview-area">
+            <canvas id="capCanvas" width="800" height="800"></canvas>
+        </div>
+
+        <!-- RIGHT SIDE — CONTROLS -->
+        <div class="controls">
+
+            <h2>Custom Design Wheel Center Cap Preview</h2>
+
+            <label>Type your text</label><br>
+            <input type="text" id="userText" style="width:100%;" value="BLACK EDITION"><br><br>
+
+            <label>Upload your logo (preview only)</label><br>
+            <input type="file" id="uploadLogo"><br><br>
+
+            <label>Background</label><br>
+            <span class="color-dot" style="background:#ffffff" onclick="setBg('#ffffff')"></span>
+            <span class="color-dot" style="background:#000000" onclick="setBg('#000000')"></span>
+            <span class="color-dot" style="background:#555555" onclick="setBg('#555555')"></span>
+            <span class="color-dot" style="background:#cc0000" onclick="setBg('#cc0000')"></span>
+            <span class="color-dot" style="background:#0047ff" onclick="setBg('#0047ff')"></span>
+            <br><br>
+
+            <label>Font</label><br>
+            <select id="fontSelect" style="width:100%;">
+                <option value="Montserrat">Montserrat Medium</option>
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+            </select><br><br>
+
+            <label>Text color</label><br>
+            <select id="textColor" style="width:100%;">
+                <option value="white">White</option>
+                <option value="black">Black</option>
+            </select><br><br>
+
+            <label>Text size</label><br>
+            <input type="range" id="textSize" min="16" max="80" value="38"><br><br>
+
+            <label>Logo zoom</label><br>
+            <input type="range" id="logoZoom" min="20" max="200" value="100"><br><br>
+
+            <button onclick="savePNG()" style="padding:10px 25px; background:#0b6cf0; color:white; border:none; border-radius:8px;">Save preview (PNG)</button>
+            <button onclick="resetAll()" style="padding:10px 25px; background:#ddd; border:none; border-radius:8px;">Reset</button>
+
+            <p style="margin-top:20px; font-size:13px; opacity:0.6;">
+                Drag your text and logo with the mouse to position them anywhere on the cap.
+                After saving, upload the PNG in the “Upload your design” field of the product page on byskino.com.
+            </p>
+
+        </div>
+
     </div>
-
-    <!-- CONTROL PANEL -->
-    <div class="panel">
-      <h1>Custom Design Wheel Center Cap Preview</h1>
-      <p class="subtitle">
-        Live preview to position your custom text and logo before saving the final PNG for upload on byskino.com.
-      </p>
-
-      <div class="field">
-        <label for="preview-text">Type your text</label>
-        <input id="preview-text" type="text" placeholder="BLACK EDITION" />
-        <small>Drag the text on the cap with your mouse to place it exactly where you want.</small>
-      </div>
-
-      <div class="field">
-        <label for="logo-upload">Upload your logo (preview only)</label>
-        <input id="logo-upload" type="file" accept="image/*" />
-        <small>Use your final high-resolution logo. This upload is only for preview.</small>
-      </div>
-
-      <div class="field">
-        <label>Background</label>
-        <div class="color-row" id="bg-colors">
-          <button class="color-dot" data-color="#ffffff" type="button">
-            <span class="color-dot-inner" style="background:#ffffff;border:1px solid #d1d5db;"></span>
-          </button>
-          <button class="color-dot" data-color="#111111" type="button">
-            <span class="color-dot-inner" style="background:#111111;"></span>
-          </button>
-          <button class="color-dot" data-color="#4b5563" type="button">
-            <span class="color-dot-inner" style="background:#4b5563;"></span>
-          </button>
-          <button class="color-dot" data-color="#b91c1c" type="button">
-            <span class="color-dot-inner" style="background:#b91c1c;"></span>
-          </button>
-          <button class="color-dot" data-color="#1d4ed8" type="button">
-            <span class="color-dot-inner" style="background:#1d4ed8;"></span>
-          </button>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="font-select">Font</label>
-        <select id="font-select">
-          <option value="Montserrat Medium">Montserrat Medium</option>
-          <option value="Montserrat SemiBold">Montserrat SemiBold</option>
-          <option value="serif">Classic Serif</option>
-          <option value="sans-serif">Simple Sans</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="text-color">Text color</label>
-        <select id="text-color">
-          <option value="#ffffff">White</option>
-          <option value="#111827">Black</option>
-          <option value="#e5e7eb">Light grey</option>
-          <option value="#facc15">Yellow</option>
-          <option value="#f97316">Orange</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Text size</label>
-        <div class="slider-row">
-          <input id="text-size" type="range" min="20" max="80" value="46" />
-          <span id="text-size-label">46 px</span>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Logo zoom</label>
-        <div class="slider-row">
-          <input id="logo-zoom" type="range" min="40" max="130" value="80" />
-          <span id="logo-zoom-label">80%</span>
-        </div>
-      </div>
-
-      <div class="buttons">
-        <button class="primary" id="save-png" type="button">Save preview (PNG)</button>
-        <button class="secondary" id="reset-btn" type="button">Reset</button>
-      </div>
-
-      <div class="help-text">
-        <strong>How to use:</strong> choose a background, type your text and drag it on the cap.
-        Upload your logo, drag it into position and adjust its size with <strong>Logo zoom</strong>.
-        After saving, upload the PNG in the “Upload your design” field of the product on byskino.com.
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-  // ----- CANVAS SETUP -----
-  const canvas = document.getElementById('dome-canvas');
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
-  const centerX = w / 2;
-  const centerY = h / 2;
-  const discRadius = 160;
+/* CANVAS + INTERACTION */
+const canvas = document.getElementById("capCanvas");
+const ctx = canvas.getContext("2d");
 
-  // RESIN DOME IMAGE (SMOLA.PNG)
-  const resinImg = new Image();
-  let resinLoaded = false;
-  resinImg.onload = () => {
-    resinLoaded = true;
-    redraw();
-  };
-  resinImg.src = 'SMOLA.png';
+let bgColor = "#ffffff";
+let domeImage = new Image();
+domeImage.src = "SMOLA.png";
 
-  // ----- STATE -----
-  let bgColor = '#111111';
+let userLogo = null;
+let userText = "BLACK EDITION";
+let textX = 400, textY = 650;
+let logoX = 400, logoY = 400;
+let draggingText = false;
+let draggingLogo = false;
 
-  let textValue = '';
-  let textSize = 46;
-  let textColor = '#ffffff';
-  let textFontFamily = 'Montserrat Medium';
+document.getElementById("userText").addEventListener("input", e => {
+    userText = e.target.value;
+    draw();
+});
 
-  let textPos = { x: centerX, y: centerY + 5 };
+document.getElementById("fontSelect").addEventListener("change", draw);
+document.getElementById("textColor").addEventListener("change", draw);
+document.getElementById("textSize").addEventListener("input", draw);
+document.getElementById("logoZoom").addEventListener("input", draw);
 
-  let logoImg = null;
-  let logoScale = 0.8;
-  let logoPos = { x: centerX, y: centerY };
-  const baseLogoSize = 140;
+function setBg(color) {
+    bgColor = color;
+    draw();
+}
 
-  let draggingTarget = null; // 'text' | 'logo'
-  let dragOffset = { x: 0, y: 0 };
-
-  // ----- UI ELEMENTS -----
-  const textInput = document.getElementById('preview-text');
-  const logoUpload = document.getElementById('logo-upload');
-  const bgColorRow = document.getElementById('bg-colors');
-  const fontSelect = document.getElementById('font-select');
-  const textColorSelect = document.getElementById('text-color');
-  const textSizeSlider = document.getElementById('text-size');
-  const textSizeLabel = document.getElementById('text-size-label');
-  const logoZoomSlider = document.getElementById('logo-zoom');
-  const logoZoomLabel = document.getElementById('logo-zoom-label');
-  const saveBtn = document.getElementById('save-png');
-  const resetBtn = document.getElementById('reset-btn');
-
-  // ----- DRAWING -----
-  function drawDiscBase() {
-    ctx.save();
-    ctx.translate(centerX, centerY);
-
-    // shadow
-    ctx.beginPath();
-    ctx.arc(0, 8, discRadius + 12, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(15,23,42,0.35)';
-    ctx.filter = 'blur(8px)';
-    ctx.fill();
-    ctx.filter = 'none';
-
-    // white ring
-    ctx.beginPath();
-    ctx.arc(0, 0, discRadius + 14, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    ctx.shadowColor = 'rgba(15,23,42,0.4)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
-
-    // solid background (no gradient)
-    ctx.beginPath();
-    ctx.arc(0, 0, discRadius, 0, Math.PI * 2);
-    ctx.fillStyle = bgColor;
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  function drawResinDome() {
-    if (!resinLoaded) return;
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    const size = discRadius * 2;
-    ctx.drawImage(resinImg, -size / 2, -size / 2, size, size);
-    ctx.restore();
-  }
-
-  function drawText() {
-    if (!textValue) return;
-    ctx.save();
-    ctx.font = textSize + 'px ' + textFontFamily;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = textColor;
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 2;
-    ctx.fillText(textValue, textPos.x, textPos.y);
-    ctx.restore();
-  }
-
-  function drawLogo() {
-    if (!logoImg) return;
-    ctx.save();
-    const size = baseLogoSize * logoScale;
-
-    // клип в кръг, за да не стърчи квадратният фон на логото
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, discRadius - 8, 0, Math.PI * 2);
-    ctx.clip();
-
-    ctx.translate(logoPos.x, logoPos.y);
-    ctx.shadowColor = 'rgba(0,0,0,0.45)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetY = 3;
-    ctx.drawImage(logoImg, -size / 2, -size / 2, size, size);
-    ctx.restore();
-  }
-
-  function redraw() {
-    ctx.clearRect(0, 0, w, h);
-    drawDiscBase();
-    drawLogo();
-    drawText();
-    drawResinDome();
-  }
-
-  // ----- HIT TESTS -----
-  function isPointInLogo(x, y) {
-    if (!logoImg) return false;
-    const size = baseLogoSize * logoScale;
-    return (
-      x >= logoPos.x - size / 2 &&
-      x <= logoPos.x + size / 2 &&
-      y >= logoPos.y - size / 2 &&
-      y <= logoPos.y + size / 2
-    );
-  }
-
-  function isPointInText(x, y) {
-    if (!textValue) return false;
-    ctx.save();
-    ctx.font = textSize + 'px ' + textFontFamily;
-    const width = ctx.measureText(textValue).width;
-    const height = textSize * 1.2;
-    ctx.restore();
-    return (
-      x >= textPos.x - width / 2 &&
-      x <= textPos.x + width / 2 &&
-      y >= textPos.y - height / 2 &&
-      y <= textPos.y + height / 2
-    );
-  }
-
-  // ----- DRAG WITH MOUSE -----
-  let isMouseDown = false;
-
-  canvas.addEventListener('mousedown', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * w;
-    const y = ((e.clientY - rect.top) / rect.height) * h;
-
-    if (isPointInLogo(x, y)) {
-      draggingTarget = 'logo';
-      dragOffset.x = x - logoPos.x;
-      dragOffset.y = y - logoPos.y;
-      isMouseDown = true;
-    } else if (isPointInText(x, y)) {
-      draggingTarget = 'text';
-      dragOffset.x = x - textPos.x;
-      dragOffset.y = y - textPos.y;
-      isMouseDown = true;
-    }
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isMouseDown || !draggingTarget) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * w;
-    const y = ((e.clientY - rect.top) / rect.height) * h;
-
-    if (draggingTarget === 'logo') {
-      logoPos.x = x - dragOffset.x;
-      logoPos.y = y - dragOffset.y;
-    } else if (draggingTarget === 'text') {
-      textPos.x = x - dragOffset.x;
-      textPos.y = y - dragOffset.y;
-    }
-    redraw();
-  });
-
-  window.addEventListener('mouseup', () => {
-    isMouseDown = false;
-    draggingTarget = null;
-  });
-
-  // ----- UI HANDLERS -----
-  textInput.addEventListener('input', () => {
-    textValue = textInput.value.toUpperCase();
-    redraw();
-  });
-
-  function selectBgButton(btn) {
-    document
-      .querySelectorAll('#bg-colors .color-dot')
-      .forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-  }
-
-  bgColorRow.addEventListener('click', (e) => {
-    const btn = e.target.closest('.color-dot');
-    if (!btn) return;
-    bgColor = btn.dataset.color;
-    selectBgButton(btn);
-    redraw();
-  });
-
-  const defaultBgBtn = bgColorRow.querySelectorAll('.color-dot')[1];
-  selectBgButton(defaultBgBtn);
-
-  fontSelect.addEventListener('change', () => {
-    textFontFamily = fontSelect.value;
-    redraw();
-  });
-
-  textColorSelect.addEventListener('change', () => {
-    textColor = textColorSelect.value;
-    redraw();
-  });
-
-  textSizeSlider.addEventListener('input', () => {
-    textSize = parseInt(textSizeSlider.value, 10);
-    textSizeLabel.textContent = textSize + ' px';
-    redraw();
-  });
-
-  logoZoomSlider.addEventListener('input', () => {
-    logoScale = parseInt(logoZoomSlider.value, 10) / 100;
-    logoZoomLabel.textContent = logoZoomSlider.value + '%';
-    redraw();
-  });
-
-  logoUpload.addEventListener('change', (e) => {
+document.getElementById("uploadLogo").addEventListener("change", e => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        logoImg = img;
-        logoPos = { x: centerX, y: centerY };
-        redraw();
-      };
-      img.src = ev.target.result;
+    reader.onload = function(event) {
+        userLogo = new Image();
+        userLogo.onload = draw;
+        userLogo.src = event.target.result;
     };
     reader.readAsDataURL(file);
-  });
+});
 
-  saveBtn.addEventListener('click', () => {
+/* MOUSE DRAGGING */
+canvas.addEventListener('mousedown', function(e) {
+    const mx = e.offsetX, my = e.offsetY;
+
+    // Drag text
+    ctx.font = getTextSize()+"px " + document.getElementById("fontSelect").value;
+    let textWidth = ctx.measureText(userText).width;
+    if (mx > textX - textWidth/2 && mx < textX + textWidth/2 && my > textY - 40 && my < textY + 10) {
+        draggingText = true;
+        return;
+    }
+
+    // Drag logo
+    if (userLogo) {
+        let size = getLogoSize();
+        if (mx > logoX - size/2 && mx < logoX + size/2 && my > logoY - size/2 && my < logoY + size/2) {
+            draggingLogo = true;
+            return;
+        }
+    }
+});
+
+canvas.addEventListener('mousemove', function(e) {
+    if (draggingText) { textX = e.offsetX; textY = e.offsetY; draw(); }
+    if (draggingLogo) { logoX = e.offsetX; logoY = e.offsetY; draw(); }
+});
+
+canvas.addEventListener('mouseup', () => { draggingText = draggingLogo = false; });
+
+
+function getTextSize() {
+    return document.getElementById("textSize").value;
+}
+
+function getLogoSize() {
+    return document.getElementById("logoZoom").value * 3;
+}
+
+/* MAIN DRAW FUNCTION */
+function draw() {
+    ctx.clearRect(0,0,800,800);
+
+    // Background circle
+    ctx.beginPath();
+    ctx.arc(400,400,330,0,Math.PI*2);
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+
+    // Logo
+    if (userLogo) {
+        let size = getLogoSize();
+        ctx.drawImage(userLogo, logoX - size/2, logoY - size/2, size, size);
+    }
+
+    // Text
+    ctx.fillStyle = document.getElementById("textColor").value;
+    ctx.font = getTextSize()+"px " + document.getElementById("fontSelect").value;
+    ctx.textAlign = "center";
+    ctx.fillText(userText, textX, textY);
+
+    // Dome
+    ctx.drawImage(domeImage, 0, 0, 800, 800);
+}
+
+/* SAVE PNG */
+function savePNG() {
     const link = document.createElement('a');
-    link.download = 'custom-dome-preview.png';
-    link.href = canvas.toDataURL('image/png');
+    link.download = "custom-design.png";
+    link.href = canvas.toDataURL();
     link.click();
-  });
+}
 
-  resetBtn.addEventListener('click', () => {
-    textValue = '';
-    textInput.value = '';
-    textSize = 46;
-    textSizeSlider.value = 46;
-    textSizeLabel.textContent = '46 px';
-    logoScale = 0.8;
-    logoZoomSlider.value = 80;
-    logoZoomLabel.textContent = '80%';
-    logoImg = null;
-    logoPos = { x: centerX, y: centerY };
-    textPos = { x: centerX, y: centerY + 5 };
-    bgColor = '#111111';
-    selectBgButton(defaultBgBtn);
-    fontSelect.value = 'Montserrat Medium';
-    textFontFamily = 'Montserrat Medium';
-    textColorSelect.value = '#ffffff';
-    textColor = '#ffffff';
-    redraw();
-  });
+/* RESET */
+function resetAll() {
+    textX = 400; textY = 650;
+    logoX = 400; logoY = 400;
+    userLogo = null;
+    document.getElementById("uploadLogo").value = "";
+    draw();
+}
 
-  // initial draw
-  redraw();
+domeImage.onload = draw;
+
 </script>
+
 </body>
 </html>
