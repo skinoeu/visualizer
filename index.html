@@ -193,6 +193,14 @@
       </div>
 
       <div class="field">
+        <div class="field-label">Text layout</div>
+        <select id="text-layout">
+          <option value="straight" selected>Straight (free move)</option>
+          <option value="arc">Arc on rim</option>
+        </select>
+      </div>
+
+      <div class="field">
         <div class="field-label">Upload your logo (preview only)</div>
         <input id="logo-upload" type="file" accept="image/*" />
       </div>
@@ -237,6 +245,14 @@
       </div>
 
       <div class="field">
+        <div class="field-label">Ring position (arc mode)</div>
+        <div class="slider-row">
+          <input id="arc-position" type="range" min="-180" max="180" value="0" />
+          <span id="arc-position-label">0°</span>
+        </div>
+      </div>
+
+      <div class="field">
         <div class="field-label">Logo zoom</div>
         <div class="slider-row">
           <input id="logo-zoom" type="range" min="40" max="130" value="90" />
@@ -250,9 +266,8 @@
       </div>
 
       <div class="hint">
-        <strong>Tip:</strong> Drag the <strong>logo</strong> and the <strong>text</strong> with your mouse to position them
-        exactly where you want on the cap. After saving, upload the PNG in the
-        “Upload your design” field of the product page on byskino.com.
+        <strong>Straight mode:</strong> drag the text and logo with your mouse to position them anywhere.<br>
+        <strong>Arc mode:</strong> the text follows the rim – use <em>Ring position</em> to rotate it around the cap.
       </div>
     </div>
   </div>
@@ -262,69 +277,51 @@
   const canvas = document.getElementById('dome-canvas');
   const ctx = canvas.getContext('2d');
 
-  // Base disc parameters
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
   const discRadius = 320;
 
-  // State
+  // --- State ---
   let bgColor = '#ffffff';
 
-  // resin highlight
   const smolaImg = new Image();
   smolaImg.src = 'SMOLA.png';
 
-  // Logo state
   let logoImg = null;
-  let logoScale = 0.9; // 0.4 – 1.3
+  let logoScale = 0.9;
   let logoX = centerX;
   let logoY = centerY;
   const logoBaseSize = discRadius * 1.3;
 
-  // Text state
   let textValue = '';
   let textFontFamily = "Montserrat, system-ui, sans-serif";
   let textSize = 42;
   let textColor = '#ffffff';
   let textX = centerX;
-  let textY = centerY; // start in center
+  let textY = centerY;
 
-  // Dragging
+  let textLayout = 'straight'; // 'straight' | 'arc'
+  let arcOffsetDeg = 0;
+
   let isDraggingLogo = false;
   let isDraggingText = false;
   let dragOffsetX = 0;
   let dragOffsetY = 0;
 
-  // ---------- Helpers ----------
+  // --- Drawing ---
   function drawBase() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // background circle
+    // чист плътен фон
     ctx.save();
     ctx.beginPath();
     ctx.arc(centerX, centerY, discRadius, 0, Math.PI * 2);
     ctx.closePath();
     ctx.fillStyle = bgColor;
     ctx.fill();
-
-    // subtle inner shading for depth
-    const grad = ctx.createRadialGradient(
-      centerX - discRadius * 0.25,
-      centerY - discRadius * 0.25,
-      discRadius * 0.2,
-      centerX,
-      centerY,
-      discRadius * 1.2
-    );
-    grad.addColorStop(0, 'rgba(255,255,255,0.25)');
-    grad.addColorStop(0.35, 'rgba(255,255,255,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.35)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
     ctx.restore();
 
-    // outer white rim
+    // бял борд
     ctx.save();
     ctx.beginPath();
     ctx.arc(centerX, centerY, discRadius + 22, 0, Math.PI * 2);
@@ -333,18 +330,16 @@
     ctx.stroke();
     ctx.restore();
 
-    // draw SMOLA highlight on top
+    // SMOLA купол отгоре
     if (smolaImg.complete) {
       ctx.save();
-      ctx.clip(); // clip to disc
       ctx.beginPath();
       ctx.arc(centerX, centerY, discRadius, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
 
-      // slightly larger than disc
       const size = discRadius * 2.2;
-      ctx.globalAlpha = 0.95;
+      ctx.globalAlpha = 0.97;
       ctx.drawImage(
         smolaImg,
         centerX - size / 2,
@@ -368,7 +363,7 @@
     ctx.restore();
   }
 
-  function drawText() {
+  function drawTextStraight() {
     if (!textValue) return;
     ctx.save();
     ctx.beginPath();
@@ -382,9 +377,62 @@
     ctx.shadowColor = 'rgba(0,0,0,0.55)';
     ctx.shadowBlur = 6;
     ctx.shadowOffsetY = 2;
-
     ctx.fillText(textValue, textX, textY);
     ctx.restore();
+  }
+
+  function drawTextArc() {
+    if (!textValue) return;
+
+    const radius = discRadius - 42;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, discRadius - 16, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.translate(centerX, centerY);
+    ctx.rotate((arcOffsetDeg * Math.PI) / 180);
+
+    ctx.font = textSize + 'px ' + textFontFamily;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = textColor;
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
+
+    const chars = [...textValue];
+    const widths = chars.map(ch => ctx.measureText(ch).width);
+    const totalWidth = widths.reduce((a, b) => a + b, 0);
+
+    const totalArc = totalWidth / radius;
+    let angle = -totalArc / 2;
+
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      const w = widths[i];
+      const charAngle = angle + (w / 2) / radius;
+
+      ctx.save();
+      ctx.rotate(charAngle);
+      ctx.translate(0, -radius);
+      ctx.rotate(Math.PI / 2); // текстът стои изправен
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+
+      angle += w / radius;
+    }
+
+    ctx.restore();
+  }
+
+  function drawText() {
+    if (textLayout === 'arc') {
+      drawTextArc();
+    } else {
+      drawTextStraight();
+    }
   }
 
   function redraw() {
@@ -393,8 +441,9 @@
     drawText();
   }
 
-  // -------------- Event wiring --------------
-  // background swatches
+  // --- UI wiring ---
+
+  // background
   document.getElementById('bg-swatches').addEventListener('click', (e) => {
     const sw = e.target.closest('.swatch');
     if (!sw) return;
@@ -404,9 +453,16 @@
     redraw();
   });
 
-  // text input
+  // text
   document.getElementById('text-input').addEventListener('input', (e) => {
     textValue = e.target.value;
+    redraw();
+  });
+
+  // layout
+  const textLayoutSelect = document.getElementById('text-layout');
+  textLayoutSelect.addEventListener('change', (e) => {
+    textLayout = e.target.value;
     redraw();
   });
 
@@ -428,6 +484,15 @@
   textSizeSlider.addEventListener('input', (e) => {
     textSize = parseInt(e.target.value, 10);
     textSizeLabel.textContent = textSize + ' px';
+    redraw();
+  });
+
+  // arc position
+  const arcPosSlider = document.getElementById('arc-position');
+  const arcPosLabel = document.getElementById('arc-position-label');
+  arcPosSlider.addEventListener('input', (e) => {
+    arcOffsetDeg = parseInt(e.target.value, 10);
+    arcPosLabel.textContent = arcOffsetDeg + '°';
     redraw();
   });
 
@@ -458,7 +523,7 @@
     reader.readAsDataURL(file);
   });
 
-  // ---------- Drag logic ----------
+  // --- Drag helpers ---
   function getCanvasCoords(evt) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -479,7 +544,7 @@
     );
   }
 
-  function isPointOnText(x, y) {
+  function isPointOnTextStraight(x, y) {
     if (!textValue) return false;
     ctx.save();
     ctx.font = textSize + 'px ' + textFontFamily;
@@ -504,7 +569,7 @@
       isDraggingText = false;
       dragOffsetX = x - logoX;
       dragOffsetY = y - logoY;
-    } else if (isPointOnText(x, y)) {
+    } else if (textLayout === 'straight' && isPointOnTextStraight(x, y)) {
       isDraggingText = true;
       isDraggingLogo = false;
       dragOffsetX = x - textX;
@@ -519,7 +584,7 @@
     if (isDraggingLogo) {
       logoX = x - dragOffsetX + dragOffsetX;
       logoY = y - dragOffsetY + dragOffsetY;
-    } else if (isDraggingText) {
+    } else if (isDraggingText && textLayout === 'straight') {
       textX = x - dragOffsetX + dragOffsetX;
       textY = y - dragOffsetY + dragOffsetY;
     }
@@ -531,14 +596,13 @@
     isDraggingText = false;
   });
 
-  // ---------- Save & reset ----------
+  // --- Save & reset ---
   document.getElementById('save-btn').addEventListener('click', () => {
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = 1000;
     exportCanvas.height = 1000;
     const ex = exportCanvas.getContext('2d');
 
-    // simple scale factor from preview → export
     const scale = exportCanvas.width / canvas.width;
     ex.scale(scale, scale);
     ex.drawImage(canvas, 0, 0);
@@ -556,6 +620,12 @@
 
     textValue = '';
     document.getElementById('text-input').value = '';
+    textLayout = 'straight';
+    textLayoutSelect.value = 'straight';
+    arcOffsetDeg = 0;
+    arcPosSlider.value = 0;
+    arcPosLabel.textContent = '0°';
+
     textFontFamily = "Montserrat, system-ui, sans-serif";
     document.getElementById('font-select').value = textFontFamily;
     textColor = '#ffffff';
@@ -577,7 +647,6 @@
     redraw();
   });
 
-  // first draw (wait a bit for SMOLA, но и без нея се рисува)
   smolaImg.onload = redraw;
   setTimeout(redraw, 150);
 </script>
