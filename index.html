@@ -11,11 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -35,7 +31,7 @@
         0 0 0 1px rgba(148, 163, 184, 0.12);
       max-width: 1200px;
       width: 100%;
-      padding: 32px 40px 32px 40px;
+      padding: 32px 40px;
       display: grid;
       grid-template-columns: minmax(0, 470px) minmax(0, 1fr);
       gap: 32px;
@@ -79,11 +75,7 @@
       display: block;
     }
 
-    .panel {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
+    .panel { display: flex; flex-direction: column; gap: 14px; }
 
     .panel-header h1 {
       font-family: "Montserrat", system-ui, sans-serif;
@@ -100,12 +92,7 @@
       line-height: 1.45;
     }
 
-    .field {
-      margin-top: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .field { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
 
     .field label {
       font-size: 12px;
@@ -115,13 +102,9 @@
       letter-spacing: 0.06em;
     }
 
-    .field small {
-      font-size: 11px;
-      color: #9ca3af;
-    }
+    .field small { font-size: 11px; color: #9ca3af; }
 
-    input[type="text"],
-    select {
+    input[type="text"], select {
       width: 100%;
       border-radius: 999px;
       border: 1px solid #d1d5db;
@@ -132,15 +115,12 @@
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    input[type="text"]:focus,
-    select:focus {
+    input[type="text"]:focus, select:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
     }
 
-    input[type="file"] {
-      font-size: 12px;
-    }
+    input[type="file"] { font-size: 12px; }
 
     .color-dots {
       display: flex;
@@ -174,11 +154,7 @@
       border-color: #2563eb;
     }
 
-    .slider-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .slider-row { display: flex; align-items: center; gap: 8px; }
 
     input[type="range"] {
       flex: 1;
@@ -219,14 +195,9 @@
       text-align: right;
     }
 
-    .buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 2px;
-    }
+    .buttons { display: flex; gap: 10px; margin-top: 2px; }
 
-    .btn-primary,
-    .btn-secondary {
+    .btn-primary, .btn-secondary {
       flex: 1;
       border-radius: 999px;
       padding: 9px 14px;
@@ -258,14 +229,8 @@
       box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
     }
 
-    .btn-secondary {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .btn-secondary:hover {
-      background: #d1d5db;
-    }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
 
     .hint {
       font-size: 11px;
@@ -274,20 +239,9 @@
       line-height: 1.4;
     }
 
-    .hint b {
-      color: #6b7280;
-      font-weight: 600;
-    }
-
-    .hint a {
-      color: #2563eb;
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .hint a:hover {
-      text-decoration: underline;
-    }
+    .hint b { color: #6b7280; font-weight: 600; }
+    .hint a { color: #2563eb; text-decoration: none; font-weight: 500; }
+    .hint a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -361,8 +315,8 @@
       <div class="field">
         <label>Logo zoom</label>
         <div class="slider-row">
-          <input id="logo-zoom" type="range" min="40" max="200" value="100" />
-          <span class="slider-label" id="logo-zoom-label">100%</span>
+          <input id="logo-zoom" type="range" min="60" max="260" value="140" />
+          <span class="slider-label" id="logo-zoom-label">140%</span>
         </div>
       </div>
 
@@ -397,7 +351,7 @@
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = 210;
+    const radius  = 210;
 
     const smola = new Image();
     smola.src = "SMOLA.png";
@@ -411,7 +365,7 @@
       font: "Montserrat",
       bgColor: "#0f172a",
       logoImg: null,
-      logoScale: 100,
+      logoScale: 140,
       logoX: centerX,
       logoY: centerY,
     };
@@ -421,7 +375,7 @@
     let dragOffsetY = 0;
 
     function setActiveBgDot(color) {
-      Array.from(bgDots.querySelectorAll(".color-dot")).forEach((dot) => {
+      Array.from(bgDots.querySelectorAll(".color-dot")).forEach(dot => {
         dot.classList.toggle("active", dot.getAttribute("data-color") === color);
       });
     }
@@ -456,8 +410,7 @@
 
     function drawLogo() {
       if (!state.logoImg) return;
-
-      const baseSize = 220;
+      const baseSize = 260; // по-голяма база
       const size = baseSize * (state.logoScale / 100);
 
       ctx.save();
@@ -503,8 +456,9 @@
       drawText();
     }
 
+    // === UI handlers ===
     textInput.addEventListener("input", () => {
-      state.text = textInput.value.toUpperCase();
+      state.text = textInput.value;
       draw();
     });
 
@@ -530,7 +484,7 @@
       draw();
     });
 
-    bgDots.addEventListener("click", (e) => {
+    bgDots.addEventListener("click", e => {
       const btn = e.target.closest(".color-dot");
       if (!btn) return;
       const color = btn.getAttribute("data-color");
@@ -539,20 +493,20 @@
       draw();
     });
 
-    logoInput.addEventListener("change", (e) => {
+    logoInput.addEventListener("change", e => {
       const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (ev) => {
+      reader.onload = ev => {
         const img = new Image();
         img.onload = () => {
           state.logoImg = img;
-          state.logoX = centerX;
-          state.logoY = centerY;
-          state.logoScale = 100;
-          logoZoomRange.value = 100;
-          logoZoomLabel.textContent = "100%";
+          state.logoX  = centerX;
+          state.logoY  = centerY;
+          state.logoScale = 140;
+          logoZoomRange.value   = 140;
+          logoZoomLabel.textContent = "140%";
           draw();
         };
         img.src = ev.target.result;
@@ -560,47 +514,46 @@
       reader.readAsDataURL(file);
     });
 
-    function hitTestLogo(x, y) {
-      if (!state.logoImg) return false;
-      const baseSize = 220;
-      const size = baseSize * (state.logoScale / 100);
-      const left = state.logoX - size / 2;
-      const top = state.logoY - size / 2;
-      return x >= left && x <= left + size && y >= top && y <= top + size;
-    }
-
-    function hitTestText(x, y) {
-      if (!state.text) return false;
-      ctx.font = `${state.textSize}px ${state.font}, system-ui, sans-serif`;
-      const metrics = ctx.measureText(state.text);
-      const width = metrics.width;
-      const height = state.textSize * 1.2;
-      const left = state.textX - width / 2;
-      const top = state.textY - height / 2;
-      return x >= left && x <= left + width && y >= top && y <= top + height;
-    }
-
-    canvas.addEventListener("mousedown", (e) => {
+    // === Dragging – просто и надеждно ===
+    canvas.addEventListener("mousedown", e => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      if (hitTestLogo(x, y)) {
+      // ако няма нищо за местене – стоп
+      if (!state.logoImg && !state.text) return;
+
+      const insideCircle =
+        Math.hypot(x - centerX, y - centerY) <= radius;
+
+      if (!insideCircle) return;
+
+      // ако има и лого, и текст:
+      if (state.logoImg && state.text) {
+        // горната част на кръга → мести логото
+        // долната част → мести текста
+        if (y < centerY + radius * 0.1) {
+          dragTarget = "logo";
+          dragOffsetX = x - state.logoX;
+          dragOffsetY = y - state.logoY;
+        } else {
+          dragTarget = "text";
+          dragOffsetX = x - state.textX;
+          dragOffsetY = y - state.textY;
+        }
+      } else if (state.logoImg) {
         dragTarget = "logo";
         dragOffsetX = x - state.logoX;
         dragOffsetY = y - state.logoY;
-      } else if (hitTestText(x, y)) {
+      } else if (state.text) {
         dragTarget = "text";
         dragOffsetX = x - state.textX;
         dragOffsetY = y - state.textY;
-      } else {
-        dragTarget = null;
       }
     });
 
-    canvas.addEventListener("mousemove", (e) => {
+    canvas.addEventListener("mousemove", e => {
       if (!dragTarget) return;
-
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -619,6 +572,7 @@
       dragTarget = null;
     });
 
+    // === Save / Reset ===
     saveBtn.addEventListener("click", () => {
       const link = document.createElement("a");
       link.download = "custom-wheel-cap-preview.png";
@@ -635,7 +589,7 @@
       state.font = "Montserrat";
       state.bgColor = "#0f172a";
       state.logoImg = null;
-      state.logoScale = 100;
+      state.logoScale = 140;
       state.logoX = centerX;
       state.logoY = centerY;
 
