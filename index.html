@@ -382,44 +382,56 @@
   }
 
   function drawTextArc() {
-    if (!textValue) return;
+  if (!textValue) return;
 
-    const radius = discRadius - 42;
+  // по-близо до ринга
+  const radius = discRadius - 35;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, discRadius - 10, 0, Math.PI * 2);
+  ctx.clip();
+
+  // центрираме системата в средата
+  ctx.translate(centerX, centerY);
+  // завъртаме според слайдера Ring position
+  ctx.rotate((arcOffsetDeg * Math.PI) / 180);
+
+  ctx.font = textSize + 'px ' + textFontFamily;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = textColor;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetY = 2;
+
+  const chars = [...textValue];
+  const widths = chars.map(ch => ctx.measureText(ch).width);
+  const totalWidth = widths.reduce((a, b) => a + b, 0);
+
+  // колко радиани заема целият текст по окръжността
+  const totalArc = totalWidth / radius;
+  // започваме така, че да е центриран
+  let currentAngle = -totalArc / 2;
+
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const w = widths[i];
+    const charArc = w / radius;
+    const midAngle = currentAngle + charArc / 2;
 
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, discRadius - 16, 0, Math.PI * 2);
-    ctx.clip();
+    // въртим до средата на буквата + π/2, за да е изправена по тангентата
+    ctx.rotate(midAngle + Math.PI / 2);
+    ctx.translate(0, -radius);
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
 
-    ctx.translate(centerX, centerY);
-    ctx.rotate((arcOffsetDeg * Math.PI) / 180);
+    currentAngle += charArc;
+  }
 
-    ctx.font = textSize + 'px ' + textFontFamily;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = textColor;
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 2;
-
-    const chars = [...textValue];
-    const widths = chars.map(ch => ctx.measureText(ch).width);
-    const totalWidth = widths.reduce((a, b) => a + b, 0);
-
-    const totalArc = totalWidth / radius;
-    let angle = -totalArc / 2;
-
-    for (let i = 0; i < chars.length; i++) {
-      const ch = chars[i];
-      const w = widths[i];
-      const charAngle = angle + (w / 2) / radius;
-
-      ctx.save();
-      ctx.rotate(charAngle);
-      ctx.translate(0, -radius);
-      ctx.rotate(Math.PI / 2); // текстът стои изправен
-      ctx.fillText(ch, 0, 0);
-      ctx.restore();
+  ctx.restore();
+}
 
       angle += w / radius;
     }
